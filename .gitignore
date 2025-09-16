@@ -1,0 +1,16 @@
+
+.idea/
+
+build/
+
+etteln_rain_simulation/__pycache__/
+
+etteln_rain_simulation.egg-info/
+
+flood_component/__pycache__/
+
+sim_output/
+
+forecast_peak.geojson
+
+forecast_peak.png
