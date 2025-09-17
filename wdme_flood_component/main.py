@@ -5,6 +5,17 @@ import json
 import unexecore.debug
 
 from fastapi import FastAPI, Response, Request
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.responses import FileResponse
+
+origins = [
+    "http://localhost",
+    "http://localhost:63342",
+]
+
+
+from fastapi.staticfiles import StaticFiles
+
 
 import flood_simulation.rainfall_model
 import flood_simulation.wdme_results
@@ -13,6 +24,17 @@ from starlette.requests import Request
 current_results = {}
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 
 @app.get("/flooding/floodmodel/{filename}")
@@ -32,7 +54,11 @@ async def get_flood_model(filename, response: Response):
 @app.get("/flooding/get_flood_data")
 async def get_flood_data():
     global current_results
-    return current_results['result']
+
+    if 'result' in current_results:
+        return current_results['result']
+
+    return {}
 
 
 from pydantic import BaseModel
@@ -76,3 +102,9 @@ async def post_flood_data(item: Item, request:Request, response: Response):
         response.status_code = 500
 
     return {}
+
+
+@app.get("/")
+def read_root():
+    return FileResponse(os.getcwd() + os.sep + 'static' + os.sep + 'index.html')
+

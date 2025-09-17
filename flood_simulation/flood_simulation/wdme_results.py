@@ -41,10 +41,36 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
         }
     }
 
+    #this should be the blue scale that is normally used
+    wdme_result['result']['color_key'] = [
+        {
+            "text": "<0.1m",
+            "color": "#ffffff"
+        },
+        {
+            "text": "0.1-0.5m",
+            "color": "#ceecfe"
+        },
+        {
+            "text": "0.5-1.0m",
+            "color": "#9ccbfe"
+        },
+        {
+            "text": "1.0-2.0m",
+            "color": "#7299fe"
+        },
+        {
+            "text": "2.0-4.0m",
+            "color": "#4566fe"
+        },
+        {
+            "text": ">4.0m",
+            "color": "#1739ce"
+        }
+    ]
+
     if server_path != None:
-        """
-        make assets and put in folder
-        """
+        #convert rainfall ASC data into geojson
         work_list = {'current': ['peak'], 'nowcast': ['peak'], 'forecast': ['1day', '2day', 'end']}
 
         colour_lookup = {}
@@ -73,7 +99,7 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
                 wdme_result['data'][label+'.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', 'flood-map', 'depth', colour_lookup)
                 wdme_result['result']['geojson'].append({'type':json_key, 'url': server_path+'/flooding/floodmodel/'+ label+'.geojson'})
 
-        # result['caflood_src']['dem'] -> greyscale
+        # convert DEM model into greyscale
         name = 'dem'
         asc_file = unexecore.geofile.GeoFile()
         asc_file.loadASC(flood_result['caflood_src']['dem'])
@@ -84,7 +110,6 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
 
         num_range = largest - smallest
 
-        #make a greyscale
         grey_scale = {}
         steps = 32
         for i in range(steps):
@@ -96,7 +121,7 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
         wdme_result['data'][name + '.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', name, 'value', grey_scale)
         wdme_result['result']['geojson'].append({'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
 
-        # result['caflood_src']['land'] -> lookup
+        # convert landuse into lookups
         name = 'land'
         asc_file = unexecore.geofile.GeoFile()
         asc_file.loadASC(flood_result['caflood_src'][name])
@@ -117,7 +142,7 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
         wdme_result['data'][name + '.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', name, 'value', grey_scale)
         wdme_result['result']['geojson'].append({'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
 
-        # result['caflood_src']['rain'] -> lookup
+        # convert rain sensor regions into lookup
         name = 'rain'
         asc_file = unexecore.geofile.GeoFile()
         asc_file.loadASC(flood_result['caflood_src'][name])
