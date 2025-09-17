@@ -14,3 +14,7 @@ sim_output/
 forecast_peak.geojson
 
 forecast_peak.png
+
+flood_simulation/output/
+
+flood_simulation/viz/

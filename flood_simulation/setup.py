@@ -15,11 +15,11 @@ def package_files(directory):
                 paths.append(os.path.join('..', path, filename))
     return paths
 
-extra_files = package_files('ettelnrain/data')
+extra_files = package_files('flood_simulation/data')
 
 
 setuptools.setup(
-    name='etteln_rain_simulation',
+    name='flood_simulation',
     version='1.0.0.1',
     author='Gareth Lewis',
     author_email='g.lewis2@exeter.ac.uk',
@@ -28,7 +28,7 @@ setuptools.setup(
     long_description_content_type='text/markdown',
     url='https://github.com/pypa/sampleproject',
     # packages=setuptools.find_packages(),
-    packages=['etteln_rain_simulation/.'],
+    packages=['flood_simulation/.'],
     install_requires=['pyproj','pillow','jenkspy'
     ],
     classifiers=[

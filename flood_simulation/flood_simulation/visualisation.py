@@ -1,16 +1,7 @@
-import os
-import datetime
-
-import unexecore.testharness
-import unexecore.debug
-
-import etteln_rain_simulation.rainfall_model
-
-
-
 import json
 import pyproj
 import unexecore.geofile
+import os
 
 def round_floats(o):
     if isinstance(o, float):
@@ -21,14 +12,12 @@ def round_floats(o):
         return [round_floats(x) for x in o]
     return o
 
-def asc_to_geojson(asc_filename: str, src_crs:str, dest_crs:str, colour_lookup:dict=None)-> dict:
-    try:
-        asc_file = unexecore.geofile.GeoFile()
-        asc_file.loadASC(asc_filename)
 
+def asc_to_geojson(asc_file:unexecore.geofile.GeoFile, src_crs: str, dest_crs: str, name:str, attribute_label:str, colour_lookup: dict = None) -> dict:
+    try:
         geojson = {
             "type": "FeatureCollection",
-            "name": "flood-data",
+            "name": name,
             "crs": {
                 "type": "name",
                 "properties": {
@@ -37,7 +26,7 @@ def asc_to_geojson(asc_filename: str, src_crs:str, dest_crs:str, colour_lookup:d
             },
             "features": []
         }
-        
+
         if colour_lookup == None:
             colour_lookup = {}
             colour_lookup[0.1] = (255, 255, 255, 0)
@@ -48,6 +37,7 @@ def asc_to_geojson(asc_filename: str, src_crs:str, dest_crs:str, colour_lookup:d
             colour_lookup[9999999.0] = (23, 57, 206, 255)
 
         keys = list(colour_lookup.keys())
+        keys.sort()
         band1 = asc_file.raster_file.read(1)
 
         transformer = pyproj.Transformer.from_crs(src_crs, dest_crs)
@@ -60,7 +50,7 @@ def asc_to_geojson(asc_filename: str, src_crs:str, dest_crs:str, colour_lookup:d
                     if v0 != asc_file.raster_file.nodata and v0 > keys[0]:
                         feature = {
                             "properties": {
-                                "depth": 0.0,
+                                attribute_label: 0.0,
                                 "color": "#000000"
                             },
                             "geometry": {
@@ -88,7 +78,7 @@ def asc_to_geojson(asc_filename: str, src_crs:str, dest_crs:str, colour_lookup:d
                         feature['geometry']['coordinates'].append(coords[0])
 
                         feature['geometry']['coordinates'] = [feature['geometry']['coordinates']]
-                        feature['properties']['depth'] = float(v0)
+                        feature['properties'][attribute_label] = float(v0)
 
                         for i in range(0, len(keys) - 1):
                             if v0 >= keys[i] and v0 < keys[i + 1]:
@@ -103,72 +93,67 @@ def asc_to_geojson(asc_filename: str, src_crs:str, dest_crs:str, colour_lookup:d
 
     return {}
 
-class etteln_Harness(unexecore.testharness.TestHarness):
-    def __init__(self):
-        super().__init__()
 
-        self.output_filepath = os.getcwd() + os.sep + 'output'
-        self.model = etteln_rain_simulation.rainfall_model.Model(output_filepath=self.output_filepath)
+def asc_get_info(asc_file:unexecore.geofile.GeoFile) -> dict:
 
-        option_id = 1
-        self.options[str(option_id)] = {'label': 'dummy', 'function': self.dummy}
-        option_id += 1
+    info = {}
+    try:
+        band1 = asc_file.raster_file.read(1)
 
-        self.options[str(option_id)] = {'label': 'std_model', 'function': self.std_model}
-        option_id += 1
+        for y in range(0, asc_file.raster_file.height):
+            for x in range(0, asc_file.raster_file.width):
+                try:
+                    v0 = band1[y, x]
 
-    def dummy(self):
-        pass
+                    if v0 != asc_file.raster_file.nodata:
+                        if v0 not in info:
+                            info[v0] = 0
+                        info[v0]+=1
 
-    def log(self, text):
-        print(text)
+                except Exception as e:
+                    print(unexecore.debug.exception_to_string(e))
+    except Exception as e:
+        print(unexecore.debug.exception_to_string(e))
 
-    def std_model(self):
-        data = [
-          {
-            "Last72Hour": 0,
-            "Last24Hour": 0,
-            "Last12Hour": 0,
-            "Last4Hour": 0,
-            "Last2Hour": 0,
-            "LastHour": 0,
-            "Forecast2Hour": 50,
-            "Forecast0To24": 50,
-            "Forecast24To48": 0,
-            "Forecast48To72": 0,
-            "TrafficLights": {
-              "current": "green",
-              "nowcast": "red",
-              "forecast": "amber"
-            },
-            "dateObserved": "2025-09-04T02:00:00Z"
-          }
-        ]
-        try:
-            colour_lookup = {}
-            colour_lookup[0.1] = (255, 255, 255, 0)
-            colour_lookup[0.5] = (206, 236, 254, 255)
-            colour_lookup[1.0] = (156, 203, 254, 255)
-            colour_lookup[2.0] = (114, 153, 254, 255)
-            colour_lookup[4.0] = (69, 102, 254, 255)
-            colour_lookup[9999999.0] = (23, 57, 206, 255)
-
-            result = self.model.run(data[0], timestamp=datetime.datetime.now(datetime.timezone.utc))
-
-            with open('forecast_peak.geojson', 'w') as f:
-                json.dump(asc_to_geojson(result['forecast']['peak'],'EPSG:3035', 'EPSG:4326', colour_lookup), f)
-
-                asc_file = unexecore.geofile.GeoFile()
-                asc_file.loadASC(result['forecast']['peak'])
-
-                im = asc_file.get_png(colour_lookup)
-                im.save('forecast_peak.png')
-
-            print()
-        except Exception as e:
-            self.log(unexecore.debug.exception_to_string(e))
+    return info
 
 
-if __name__ == '__main__':
-    harness = etteln_Harness()
-    harness.run()
+def dump_visualisations(result:dict, output_filepath:str):
+    work_list = {'current': ['peak'], 'nowcast': ['peak'], 'forecast': ['peak', '1day', '2day', 'end']}
+
+    result_path = output_filepath + os.sep
+
+    if not os.path.exists(result_path):
+        os.makedirs(result_path)
+    else:
+        unexecore.file.deltree(result_path)
+
+
+    colour_lookup = {}
+    colour_lookup[0.1] = (255, 255, 255, 0)
+    colour_lookup[0.5] = (206, 236, 254, 255)
+    colour_lookup[1.0] = (156, 203, 254, 255)
+    colour_lookup[2.0] = (114, 153, 254, 255)
+    colour_lookup[4.0] = (69, 102, 254, 255)
+    colour_lookup[9999999.0] = (23, 57, 206, 255)
+
+
+    work_list = {'current': ['peak'], 'nowcast': ['peak'], 'forecast': ['peak', '1day', '2day', 'end']}
+
+    for key, value in work_list.items():
+        for item in value:
+            asc_file = unexecore.geofile.GeoFile()
+            asc_file.loadASC(result[key][item])
+
+            name = key + '_' + item
+
+            im = asc_file.get_png(colour_lookup)
+            im.save(result_path + name + '.png')
+
+            geojson = asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', colour_lookup)
+            with open(result_path + name + '.geojson', 'w') as f:
+                json.dump(geojson, f)
+
+    # result['caflood_src']['dem'] -> greyscale
+    # result['caflood_src']['land'] -> lookup
+    # result['caflood_src']['rain'] -> lookup

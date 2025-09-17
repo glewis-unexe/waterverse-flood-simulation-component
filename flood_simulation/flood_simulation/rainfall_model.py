@@ -217,6 +217,13 @@ class Model:
     def run(self, result, timestamp: datetime.datetime):
 
         response = {}
+        response['TrafficLights'] = {
+            "current": "none",
+            "nowcast": "none",
+            "forecast": "none"
+        }
+
+        response['timestamp'] = unexecore.time.datetime_to_fiware(timestamp)
 
         current_scenario = {}
         nowcast_scenario = {}
@@ -229,6 +236,9 @@ class Model:
                 if 'data' in result:
                     scenario_data = self.HST_to_sensible(result['data'])
 
+                    if 'TrafficLights' in result['data']:
+                        response['TrafficLights'] = {result['data']['TrafficLights']}
+
             except Exception as e:
                 pass
 
@@ -236,6 +246,9 @@ class Model:
             try:
                 if 'sensors' in result:
                     scenario_data = self.HST_to_sensible(result['sensors'])
+
+                    if 'TrafficLights' in result['sensors']:
+                        response['TrafficLights'] = {result['sensors']['TrafficLights']}
 
             except Exception as e:
                 pass
@@ -256,12 +269,18 @@ class Model:
                     '2175': result
                 }
 
+                if 'TrafficLights' in result:
+                    response['TrafficLights'] =result['TrafficLights']
+
             except Exception as e:
                 pass
 
         if scenario_data == {}:
             response['caflood_error'] = 'no valid scenario'
             return response
+
+
+
 
         for sensor in scenario_data:
             current_scenario[sensor] = self.HST_hist_to_timeseries(scenario_data[sensor])
