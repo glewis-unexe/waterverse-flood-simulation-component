@@ -31,7 +31,8 @@ async def get_flood_model(filename, response: Response):
 
 @app.get("/flooding/get_flood_data")
 async def get_flood_data():
-    return current_results
+    global current_results
+    return current_results['result']
 
 
 from pydantic import BaseModel
