@@ -7,13 +7,10 @@ import unexecore.debug
 from fastapi import FastAPI, Response, Request
 
 import flood_simulation.rainfall_model
-import flood_simulation.visualisation
 import flood_simulation.wdme_results
 from starlette.requests import Request
 
 current_results = {}
-
-viz_path = 'viz' +os.sep
 
 app = FastAPI()
 
@@ -21,12 +18,16 @@ app = FastAPI()
 @app.get("/flooding/floodmodel/{filename}")
 async def get_flood_model(filename, response: Response):
     try:
-        with open(viz_path + filename, 'r') as f:
-            return json.load(f)
+        global current_results
+        if filename in current_results['data']:
+            return current_results['data'][filename]
+
     except Exception as e:
         response.status = 500
         return {unexecore.debug.exception_to_string(e)}
 
+    response.status = 404
+    return {'No record for: ' + filename}
 
 @app.get("/flooding/get_flood_data")
 async def get_flood_data():
@@ -42,7 +43,6 @@ class TrafficLights(BaseModel):
     forecast: str
 
 class Item(BaseModel):
-
     Last72Hour: float
     Last24Hour: float
     Last12Hour: float
@@ -65,11 +65,10 @@ async def post_flood_data(item: Item, request:Request, response: Response):
     try:
         result = model.run(item.model_dump(), timestamp=datetime.datetime.now(datetime.timezone.utc))
 
-        flood_simulation.visualisation.dump_visualisations(result, os.getcwd() + os.sep + 'results'+ os.sep)
+        global current_results
+        current_results = flood_simulation.wdme_results.create_results(result, request.url.scheme +'://'+request.url.netloc)
 
-        current_results = flood_simulation.wdme_results.create_results(result, viz_path, request.url.scheme +'://'+request.url.netloc)
-
-        return current_results
+        return current_results['result']
 
     except Exception as e:
         print(unexecore.debug.exception_to_string(e))

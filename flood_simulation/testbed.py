@@ -19,17 +19,10 @@ class etteln_Harness(unexecore.testharness.TestHarness):
         self.model = flood_simulation.rainfall_model.Model(output_filepath=self.output_filepath)
 
         option_id = 1
-        self.options[str(option_id)] = {'label': 'dummy', 'function': self.dummy}
-        option_id += 1
 
         self.options[str(option_id)] = {'label': 'std_model', 'function': self.std_model}
         option_id += 1
 
-        self.options[str(option_id)] = {'label': 'build_results', 'function': self.build_results}
-        option_id += 1
-
-    def dummy(self):
-        pass
 
     def log(self, text):
         print(text)
@@ -57,21 +50,11 @@ class etteln_Harness(unexecore.testharness.TestHarness):
         ]
         try:
             result = self.model.run(data[0], timestamp=datetime.datetime.now(datetime.timezone.utc))
-
-            wdme_results = flood_simulation.wdme_results.create_results(result,'viz','http://whatever.com')
+            wdme_results = flood_simulation.wdme_results.create_results(result,'http://whatever.com')
             print(json.dumps(wdme_results, indent=4))
-
-            #flood_simulation.visualisation.dump_visualisations(result,self.output_filepath)
 
         except Exception as e:
             self.log(unexecore.debug.exception_to_string(e))
-
-    def build_results(self):
-        result = {'TrafficLights': {'current': 'green', 'forecast': 'amber', 'nowcast': 'red'}, 'caflood_exe': 'cafloodpro_GPU_64_2024', 'caflood_src': {'dem': '/home/gareth/Documents/dev/work/waterverse/for-forking/waterverse-flood-simulation-component/flood_simulation/output//etteln_demv5.asc', 'land': '/home/gareth/Documents/dev/work/waterverse/for-forking/waterverse-flood-simulation-component/flood_simulation/output//etteln_land_maskv5.asc', 'rain': '/home/gareth/Documents/dev/work/waterverse/for-forking/waterverse-flood-simulation-component/flood_simulation/output//etteln_rain_maskv5.asc'}, 'current': {'caflood_response': 0, 'peak': '/home/gareth/Documents/dev/work/waterverse/for-forking/waterverse-flood-simulation-component/flood_simulation/output//current//current_WDrasterParam_PEAK.asc'}, 'forecast': {'1day': '/home/gareth/Documents/dev/work/waterverse/for-forking/waterverse-flood-simulation-component/flood_simulation/output//forecast//forecast_WDrasterParam_86400.asc', '2day': '/home/gareth/Documents/dev/work/waterverse/for-forking/waterverse-flood-simulation-component/flood_simulation/output//forecast//forecast_WDrasterParam_172800.asc', 'caflood_response': 0, 'end': '/home/gareth/Documents/dev/work/waterverse/for-forking/waterverse-flood-simulation-component/flood_simulation/output//forecast//forecast_WDrasterParam_252000.asc', 'peak': '/home/gareth/Documents/dev/work/waterverse/for-forking/waterverse-flood-simulation-component/flood_simulation/output//forecast//forecast_WDrasterParam_PEAK.asc'}, 'nowcast': {'caflood_response': 0, 'peak': '/home/gareth/Documents/dev/work/waterverse/for-forking/waterverse-flood-simulation-component/flood_simulation/output//nowcast//nowcast_WDrasterParam_PEAK.asc'}}
-        wdme_results = flood_simulation.wdme_results.create_results(result)
-
-        print(json.dumps(wdme_results, indent=4))
-
 
 if __name__ == '__main__':
     harness = etteln_Harness()
