@@ -18,3 +18,5 @@ forecast_peak.png
 flood_simulation/output/
 
 flood_simulation/viz/
+
+wdme_flood_component/__pycache__/
