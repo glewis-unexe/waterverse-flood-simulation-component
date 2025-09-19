@@ -3,6 +3,8 @@ import json
 import shutil
 import datetime
 import subprocess
+from urllib import response
+
 import pyproj
 
 import unexecore.file
@@ -320,9 +322,7 @@ class Model:
 
         src_root = self.get_path() + os.sep + 'data/'
 
-        src_files = ['cafloodpro_GPU_64',
-                     'caFloodPro_license.txt',
-                     'cafloodpro_GPU_64_2024',
+        src_files = ['cafloodpro_GPU_64_2024',
                      'cafloodpro_64'
                      ]
 
@@ -344,11 +344,26 @@ class Model:
         #cpu
         response['caflood_exe'] = 'cafloodpro_64'
 
-        #gpu
-        response['caflood_exe'] = 'cafloodpro_GPU_64_2024'
+        if 'WATERVERSE_FLOOD_SIM_GPU' in os.environ and os.environ['WATERVERSE_FLOOD_SIM_GPU'].lower() == 'true':
+            #gpu
+            response['caflood_exe'] = 'cafloodpro_GPU_64_2024'
 
         for scenario in scenarios:
             response[scenario] = {}
+
+            with open(path_name+os.sep+scenario +'.sh','w') as f:
+                f.write(path_name + '/' + response['caflood_exe']
+                        + ' '
+                        + '-WCA2D'
+                        + ' '
+                        + path_name
+                        + ' '
+                        +scenario + '_config.csv'
+                        + ' '
+                        + path_name + os.sep + scenario + os.sep)
+
+            os.chmod(path_name + os.sep + scenario +'.sh', 0o755)
+
             process_result = subprocess.run([path_name + '/' + response['caflood_exe'],
                                              '-WCA2D',
                                              path_name,
