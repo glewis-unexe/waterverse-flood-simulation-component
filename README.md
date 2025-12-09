@@ -7,7 +7,7 @@
 - [Overview](#overview)
 - [Functionality](#functionality)
 - [Flood Simulation Package](#Flood-Simulation-Package)
-- [WDME Flood Simulation Component](#WDME-Flood-Simulation-Component)
+- [WDME Flood Simulation Component](#Flood-Simulation-Component)
 - [Installation](#installation)
 - [Configuration](#Configuration)
 - [Limitations](#limitations)
