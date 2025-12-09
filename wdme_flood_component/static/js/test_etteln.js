@@ -257,14 +257,14 @@ class TrafficLightComponent extends HTMLComponent{
         this.content.style.backgroundColor = this.bg_colour;
         this.root.appendChild(this.content);
 
-        let top = '70px';
+        let top = '0px';
         let content_root = this.content;
 
         this.elements = {};
 
         this.elements['current.textbox'] = new Mapbox_Textbox(content_root, {
             'left': '1vw',
-            'top': '100px',
+            'top': '50px',
             'width': 'calc(100% - 2vw)',
             'height': '25%',
         });
@@ -273,7 +273,7 @@ class TrafficLightComponent extends HTMLComponent{
 
         this.elements['nowcast.textbox'] = new Mapbox_Textbox(content_root, {
             'left': '1vw',
-            'top': 'calc(100px + 30%)',
+            'top': 'calc(50px + 30%)',
             'width': 'calc(100% - 2vw)',
             'height': '25%',
         });
@@ -282,7 +282,7 @@ class TrafficLightComponent extends HTMLComponent{
 
         this.elements['forecast.textbox'] = new Mapbox_Textbox(content_root, {
             'left': '1vw',
-            'top': 'calc(100px + 60%)',
+            'top': 'calc(50px + 60%)',
             'width': 'calc(100% - 2vw)',
             'height': '25%',
         });
@@ -323,7 +323,7 @@ class TrafficLightComponent extends HTMLComponent{
 
                         //this.elements[label + '.textbox'].set_innerHTML('<h2 style="text-align:center;"'+ headings[label]+'</h2>' + '<h4></h4>' + record['traffic_lights']['text'][label]);
                         if ('traffic_lights' in record && 'text' in record['traffic_lights']) {
-                            this.elements[label + '.textbox'].set_innerHTML('<h2 style="text-align: center;">' + headings[label] + '</h2>' + '<h4></h4>' + record['traffic_lights']['text'][label]);
+                            this.elements[label + '.textbox'].set_innerHTML('<h2 style="text-align: center; word-wrap: normal;word-break: break-all; white-space: normal">' + headings[label] + '</h2>' + '<h5 style="text-align: center; word-wrap: normal; white-space: normal">' + record['traffic_lights']['text'][label] +'</h5>') ;
                         }else{
                             this.elements[label+'.textbox'].set_bg("#7f7f7f");
                             this.elements[label + '.textbox'].set_innerHTML('<h2 style="text-align: center;">' + headings[label] + '</h2>' + '<h4></h4>' + 'No data at this time');

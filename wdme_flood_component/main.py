@@ -23,7 +23,7 @@ from starlette.requests import Request
 
 current_results = {}
 
-app = FastAPI()
+app = FastAPI(title='Flooding WDME Component', swagger_ui_parameters={"defaultModelsExpandDepth": -1})
 
 app.add_middleware(
     CORSMiddleware,
@@ -104,7 +104,7 @@ async def post_flood_data(item: Item, request:Request, response: Response):
     return {}
 
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 def read_root():
     return FileResponse(os.getcwd() + os.sep + 'static' + os.sep + 'index.html')
 
