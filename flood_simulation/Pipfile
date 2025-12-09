@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pillow = "*"
+jenkspy = "*"
+pytest = "*"
+unexecore = {file = "packages/unexecore-1.0.0.4-py3-none-any.whl"}
+setuptools = "*"
+waterverse-sdg = {file = "packages/waterverse_sdg-1.0.0.3-py3-none-any.whl"}
+requests = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.13"
+python_full_version = "3.13.10"
