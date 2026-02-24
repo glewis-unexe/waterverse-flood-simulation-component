@@ -7,6 +7,7 @@ import unexecore.debug
 from fastapi import FastAPI, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import FileResponse
+from fastapi.responses import HTMLResponse
 
 origins = [
     "http://localhost",
@@ -104,7 +105,7 @@ async def post_flood_data(item: Item, request:Request, response: Response):
     return {}
 
 
-@app.get("/", include_in_schema=False)
+@app.get("/", include_in_schema=False, response_class=HTMLResponse)
 def read_root():
     return FileResponse(os.getcwd() + os.sep + 'static' + os.sep + 'index.html')
 
