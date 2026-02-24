@@ -1,8 +1,30 @@
 import math
 import os
 import unexecore.file
-import json
-import flood_simulation.visualisation
+import unexecore.ascfile
+import unexecore.debug
+
+
+def asc_get_info(asc_file:unexecore.ascfile.ASCFile) -> dict:
+    info = {}
+    try:
+        for y in range(0, asc_file.nrows):
+            for x in range(0, asc_file.ncols):
+                try:
+                    v0 = asc_file.data[y][x]
+
+                    if v0 != asc_file.nodata:
+                        if v0 not in info:
+                            info[v0] = 0
+                        info[v0] += 1
+
+                except Exception as e:
+                    print(unexecore.debug.exception_to_string(e))
+    except Exception as e:
+        print(unexecore.debug.exception_to_string(e))
+
+    return info
+
 
 def create_results(flood_result:dict, server_path:str=None) -> dict:
     wdme_result = {
@@ -81,29 +103,37 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
         colour_lookup[4.0] = (69, 102, 254, 255)
         colour_lookup[9999999.0] = (23, 57, 206, 255)
 
+        asc_file = unexecore.ascfile.ASCFile()
+
         for key, value in work_list.items():
             for item in value:
-                asc_file = unexecore.geofile.GeoFile()
-                asc_file.loadASC(flood_result[key][item])
+                try:
+                    print('Loading: '  + flood_result[key][item])
+                    #asc_file.loadASC(flood_result[key][item])
+                    asc_file.load(flood_result[key][item])
+                    
+                    name = key + '_' + item
+                    label = item
+                    if label == 'peak':
+                        label = key
 
-                name = key + '_' + item
-                label = item
-                if label == 'peak':
-                    label = key
+                    json_key = key
 
-                json_key = key
+                    if json_key == 'forecast':
+                        json_key = item
 
-                if json_key == 'forecast':
-                    json_key = item
+                    #wdme_result['data'][label+'.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', 'flood-map', 'depth', colour_lookup)
 
-                wdme_result['data'][label+'.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', 'flood-map', 'depth', colour_lookup)
-                wdme_result['result']['geojson'].append({'type':json_key, 'url': server_path+'/flooding/floodmodel/'+ label+'.geojson'})
+                    wdme_result['data'][label + '.geojson'] = asc_file.to_geojson('EPSG:3035', colour_lookup, 'flood-map', 'depth')
+                    
+                    wdme_result['result']['geojson'].append({'type':json_key, 'url': server_path+'/flooding/floodmodel/'+ label+'.geojson'})
+                except  Exception as e:
+                    print(str(e))
 
         # convert DEM model into greyscale
         name = 'dem'
-        asc_file = unexecore.geofile.GeoFile()
-        asc_file.loadASC(flood_result['caflood_src']['dem'])
-        info = flood_simulation.visualisation.asc_get_info(asc_file)
+        asc_file.load(flood_result['caflood_src']['dem'])
+        info = asc_get_info(asc_file)
 
         smallest = math.floor(min(info.keys())-1)
         largest = math.floor(max(info.keys())+1)
@@ -118,14 +148,15 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
 
         grey_scale[asc_file.nodata] = (255,255,255,0)
 
-        wdme_result['data'][name + '.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', name, 'value', grey_scale)
+        #wdme_result['data'][name + '.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', name, 'value', grey_scale)
+        wdme_result['data'][name + '.geojson'] = asc_file.to_geojson('EPSG:3035', grey_scale, name)
         wdme_result['result']['geojson'].append({'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
 
         # convert landuse into lookups
         name = 'land'
-        asc_file = unexecore.geofile.GeoFile()
-        asc_file.loadASC(flood_result['caflood_src'][name])
-        info = flood_simulation.visualisation.asc_get_info(asc_file)
+
+        asc_file.load(flood_result['caflood_src'][name])
+        info = asc_get_info(asc_file)
 
         grey_scale = {}
         steps = len(info.keys())
@@ -139,14 +170,14 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
 
         grey_scale[asc_file.nodata] = (255, 255, 255, 0)
 
-        wdme_result['data'][name + '.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', name, 'value', grey_scale)
+        #wdme_result['data'][name + '.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', name, 'value', grey_scale)
+        wdme_result['data'][name + '.geojson'] = asc_file.to_geojson('EPSG:3035', grey_scale, name, 'value')
         wdme_result['result']['geojson'].append({'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
 
         # convert rain sensor regions into lookup
         name = 'rain'
-        asc_file = unexecore.geofile.GeoFile()
-        asc_file.loadASC(flood_result['caflood_src'][name])
-        info = flood_simulation.visualisation.asc_get_info(asc_file)
+        asc_file.load(flood_result['caflood_src'][name])
+        info = asc_get_info(asc_file)
 
         grey_scale = {}
         steps = len(info.keys())
@@ -160,7 +191,8 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
 
         grey_scale[asc_file.nodata] = (255, 255, 255, 0)
 
-        wdme_result['data'][name + '.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', name, 'value', grey_scale)
+        #wdme_result['data'][name + '.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', name, 'value', grey_scale)
+        wdme_result['data'][name + '.geojson'] = asc_file.to_geojson('EPSG:3035', grey_scale, name, 'value')
         wdme_result['result']['geojson'].append({'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
 
     if 'TrafficLights' in flood_result:

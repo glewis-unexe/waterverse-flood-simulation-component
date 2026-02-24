@@ -9,11 +9,10 @@ jenkspy = "*"
 pytest = "*"
 fastapi = "*"
 uvicorn = "*"
-unexecore = {file = "packages/unexecore-1.0.0.4-py3-none-any.whl"}
-flood-simulation = {file = "packages/flood_simulation-1.0.0.2-py3-none-any.whl"}
+unexecore = {file = "packages/unexecore-441.0.0.24-py3-none-any.whl"}
+flood-simulation = {file = "packages/flood_simulation-2.0.0.1-py3-none-any.whl"}
 
 [dev-packages]
 
 [requires]
-python_version = "3.13"
-python_full_version = "3.13.10"
+python_version = "3.14"
