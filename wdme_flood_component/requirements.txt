@@ -1,7 +1,8 @@
+#python 3.13
 pillow
 jenkspy
 pytest
-fastapi
+fastapi[standard]
 uvicorn
 
 packages/unexecore-44.0.0.3-py3-none-any.whl

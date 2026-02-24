@@ -20,6 +20,7 @@ class etteln_Harness(unexecore.testharness.TestHarness):
         option_id = 1
 
         self.wdme_flood_component_url = 'http://127.0.0.1:9999'
+        self.wdme_flood_component_url = 'http://192.168.68.111:52000/'
 
 
         self.output_filepath = os.getcwd() + os.sep + 'output' + os.sep

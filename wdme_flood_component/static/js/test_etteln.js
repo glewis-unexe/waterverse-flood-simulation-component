@@ -328,6 +328,10 @@ class TrafficLightComponent extends HTMLComponent{
                             this.elements[label+'.textbox'].set_bg("#ff446a");
                         }
 
+                        if (record['traffic_lights'][label] === 'grey') {
+                            this.elements[label+'.textbox'].set_bg("#d4d4d4");
+                        }
+
                         //this.elements[label + '.textbox'].set_innerHTML('<h2 style="text-align:center;"'+ headings[label]+'</h2>' + '<h4></h4>' + record['traffic_lights']['text'][label]);
                         if ('traffic_lights' in record && 'text' in record['traffic_lights']) {
                             this.elements[label + '.textbox'].set_innerHTML('<h2 style="text-align: center; word-wrap: normal;word-break: break-all; white-space: normal">' + headings[label] + '</h2>' + '<h5 style="text-align: center; word-wrap: normal; white-space: normal">' + record['traffic_lights']['text'][label] +'</h5>') ;
