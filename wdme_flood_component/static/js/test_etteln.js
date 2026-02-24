@@ -1,6 +1,6 @@
 mapboxgl.accessToken = 'pk.eyJ1IjoiZ2F6dGFzdGljIiwiYSI6ImNrYzA4Y2c4NjFoYnIyeHRicmZuaTgyMGQifQ.fkkbIOCwq4j70CqNeiBGcA';
-let server_url = 'http://127.0.0.1:9999/flooding/';
-//let server_url = '/flooding/';
+//let server_url = 'http://127.0.0.1:9999/flooding/';
+let server_url = '/flooding/';
 
 function getFilenameAndExtension(pathfilename){
 
