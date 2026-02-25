@@ -115,7 +115,7 @@ def post_flood_data(item: Item, request:Request, response: Response):
 @app.get("/", include_in_schema=False, response_class=HTMLResponse)
 def read_root(request: Request):
     return templates.TemplateResponse(
-        request=request, name="index.html", context={"id": "pk.eyJ1IjoiZ2F6dGFzdGljIiwiYSI6ImNrYzA4Y2c4NjFoYnIyeHRicmZuaTgyMGQifQ.fkkbIOCwq4j70CqNeiBGcA"}
+        request=request, name="index.html", context={"id": os.environ['MAPBOX_ID']}
     )
     return FileResponse(os.getcwd() + os.sep + 'static' + os.sep + 'index.html')
 

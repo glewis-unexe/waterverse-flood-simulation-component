@@ -5,4 +5,4 @@
 Dockerfile
 .dockerignore
 docker
-dev.env
+.env
