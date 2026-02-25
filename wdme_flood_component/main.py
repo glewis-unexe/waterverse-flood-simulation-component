@@ -9,6 +9,7 @@ from fastapi import FastAPI, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import FileResponse
 from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
 origins = [
     "http://localhost",
@@ -41,6 +42,8 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
+templates = Jinja2Templates(directory="templates")
 
 
 @app.get("/flooding/floodmodel/{filename}")
@@ -110,6 +113,9 @@ def post_flood_data(item: Item, request:Request, response: Response):
     return {}
 
 @app.get("/", include_in_schema=False, response_class=HTMLResponse)
-def read_root():
+def read_root(request: Request):
+    return templates.TemplateResponse(
+        request=request, name="index.html", context={"id": "pk.eyJ1IjoiZ2F6dGFzdGljIiwiYSI6ImNrYzA4Y2c4NjFoYnIyeHRicmZuaTgyMGQifQ.fkkbIOCwq4j70CqNeiBGcA"}
+    )
     return FileResponse(os.getcwd() + os.sep + 'static' + os.sep + 'index.html')
 

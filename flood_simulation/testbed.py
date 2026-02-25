@@ -69,6 +69,9 @@ class etteln_Harness(unexecore.testharness.TestHarness):
             result = self.model.run(data[0], timestamp=datetime.datetime.now(datetime.timezone.utc))
             wdme_results = flood_simulation.wdme_results.create_results(result,'http://whatever.com')
             print(json.dumps(wdme_results, indent=4))
+            for item in wdme_results['data']:
+                with open('output' +os.sep + item, "w") as f:
+                    json.dump(wdme_results['data'][item], f, indent=4)
 
         except Exception as e:
             self.log(unexecore.debug.exception_to_string(e))

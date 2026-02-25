@@ -4,6 +4,7 @@ jenkspy
 pytest
 fastapi[standard]
 uvicorn
+jinja2
 
 packages/unexecore-44.0.0.3-py3-none-any.whl
 packages/flood_simulation-2.0.0.1-py3-none-any.whl

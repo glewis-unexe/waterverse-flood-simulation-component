@@ -1,4 +1,3 @@
-mapboxgl.accessToken = 'pk.eyJ1IjoiZ2F6dGFzdGljIiwiYSI6ImNrYzA4Y2c4NjFoYnIyeHRicmZuaTgyMGQifQ.fkkbIOCwq4j70CqNeiBGcA';
 //let server_url = 'http://127.0.0.1:9999/flooding/';
 let server_url = '/flooding/';
 
@@ -410,7 +409,10 @@ class AppScreen extends Screen_base
 
 let app = new AppScreen();
 
-function app_init(root) {
+function app_init(root, mapbox_id) {
+
+  mapboxgl.accessToken = mapbox_id;
+
   let content_root = document.createElement('div');
   content_root.style.left = '0px';
   content_root.style.margin = '0';
