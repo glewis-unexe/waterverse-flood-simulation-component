@@ -5,6 +5,9 @@ import datetime
 import time
 import os
 import flood_simulation
+import json
+import unexecore.debug
+import unexecore.file
 
 
 class SimTask(threading.Thread):
@@ -29,7 +32,7 @@ class SimTask(threading.Thread):
                 time.sleep(0.01)
 
             self.lock = True
-            result = copy.deepcopy(self.current_results)
+            result = self.current_results
             self.lock = False
             print('Get Data - Got')
         except Exception as e:
@@ -67,12 +70,22 @@ class SimTask(threading.Thread):
                     self.lock = True
                     self.current_results = copy.deepcopy(new_result)
                     self.lock = False
+
+                    for item in new_result['data']:
+                        path = os.getcwd() + os.sep + 'output' + os.sep
+                        unexecore.file.buildfilepath(path)
+                        with open(path + item, "w") as f:
+                            json.dump(new_result['data'][item], f, indent=4)
+
                     print('Running Task - Written Results')
                 except Exception as e:
+                    print(unexecore.debug.exception_to_string(e))
                     print('Running Task - Failed')
                     self.lock = False
 
             time.sleep(1)
 
 
+task = SimTask()
+task.start()
 

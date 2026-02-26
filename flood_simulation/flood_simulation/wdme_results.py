@@ -5,7 +5,7 @@ import unexecore.ascfile
 import unexecore.debug
 
 
-def asc_get_info(asc_file:unexecore.ascfile.ASCFile) -> dict:
+def asc_get_info(asc_file: unexecore.ascfile.ASCFile) -> dict:
     info = {}
     try:
         for y in range(0, asc_file.nrows):
@@ -26,44 +26,44 @@ def asc_get_info(asc_file:unexecore.ascfile.ASCFile) -> dict:
     return info
 
 
-def create_results(flood_result:dict, server_path:str=None) -> dict:
+def create_results(flood_result: dict, server_path: str = None) -> dict:
     wdme_result = {
-        #results to return to user
+        # results to return to user
         'result':
-        {
-            "timestamp": flood_result["timestamp"],
-            "traffic_lights": {
-                "current": "<set>",
-                "nowcast": "<set>",
-                "forecast": "<set>",
-                "text": {
-                    "current": 'Not known at this time',
-                    "nowcast": 'Not known at this time',
-                    "forecast": 'Not known at this time'
-                }
+            {
+                "timestamp": flood_result["timestamp"],
+                "traffic_lights": {
+                    "current": "<set>",
+                    "nowcast": "<set>",
+                    "forecast": "<set>",
+                    "text": {
+                        "current": 'Not known at this time',
+                        "nowcast": 'Not known at this time',
+                        "forecast": 'Not known at this time'
+                    }
+                },
+                "color_key": [
+                    {
+                        "text": "<0.1m",
+                        "color": "#ffffff"
+                    },
+                    {
+                        "text": "0.1-0.3m",
+                        "color": "#ff8c00"
+                    },
+                    {
+                        "text": ">0.3m",
+                        "color": "#ff1414"
+                    }
+                ],
+                "geojson": []
             },
-            "color_key": [
-                {
-                    "text": "<0.1m",
-                    "color": "#ffffff"
-                },
-                {
-                    "text": "0.1-0.3m",
-                    "color": "#ff8c00"
-                },
-                {
-                    "text": ">0.3m",
-                    "color": "#ff1414"
-                }
-            ],
-            "geojson": []
-        },
-        #data to return through API call
-        'data':{
+        # data to return through API call
+        'data': {
         }
     }
 
-    #this should be the blue scale that is normally used
+    # this should be the blue scale that is normally used
     wdme_result['result']['color_key'] = [
         {
             "text": "<0.1m",
@@ -92,7 +92,7 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
     ]
 
     if server_path != None:
-        #convert rainfall ASC data into geojson
+        # convert rainfall ASC data into geojson
         work_list = {'current': ['peak'], 'nowcast': ['peak'], 'forecast': ['1day', '2day', 'end']}
 
         colour_lookup = {}
@@ -108,10 +108,10 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
         for key, value in work_list.items():
             for item in value:
                 try:
-                    print('Loading: '  + flood_result[key][item])
-                    #asc_file.loadASC(flood_result[key][item])
+                    print('Loading: ' + flood_result[key][item])
+                    # asc_file.loadASC(flood_result[key][item])
                     asc_file.load(flood_result[key][item])
-                    
+
                     name = key + '_' + item
                     label = item
                     if label == 'peak':
@@ -122,11 +122,11 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
                     if json_key == 'forecast':
                         json_key = item
 
-                    #wdme_result['data'][label+'.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', 'flood-map', 'depth', colour_lookup)
+                    # wdme_result['data'][label+'.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', 'flood-map', 'depth', colour_lookup)
 
                     wdme_result['data'][label + '.geojson'] = asc_file.to_geojson('EPSG:3035', colour_lookup, 'flood-map', 'depth')
-                    
-                    wdme_result['result']['geojson'].append({'type':json_key, 'url': server_path+'/flooding/floodmodel/'+ label+'.geojson'})
+
+                    wdme_result['result']['geojson'].append({'type': json_key, 'url': server_path + '/flooding/floodmodel/' + label + '.geojson'})
                 except  Exception as e:
                     print(str(e))
 
@@ -135,20 +135,20 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
         asc_file.load(flood_result['caflood_src']['dem'])
         info = asc_get_info(asc_file)
 
-        smallest = math.floor(min(info.keys())-1)
-        largest = math.floor(max(info.keys())+1)
+        smallest = math.floor(min(info.keys()) - 1)
+        largest = math.floor(max(info.keys()) + 1)
 
         num_range = largest - smallest
 
         grey_scale = {}
         steps = 32
         for i in range(steps):
-            v = int((i*255)/steps)
-            grey_scale[smallest + ((i*num_range)/steps)] = (v,v,v,255)
+            v = int((i * 255) / steps)
+            grey_scale[smallest + ((i * num_range) / steps)] = (v, v, v, 255)
 
-        grey_scale[asc_file.nodata] = (255,255,255,0)
+        grey_scale[asc_file.nodata] = (255, 255, 255, 0)
 
-        #wdme_result['data'][name + '.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', name, 'value', grey_scale)
+        # wdme_result['data'][name + '.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', name, 'value', grey_scale)
         wdme_result['data'][name + '.geojson'] = asc_file.to_geojson('EPSG:3035', grey_scale, name)
         wdme_result['result']['geojson'].append({'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
 
@@ -163,14 +163,18 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
 
         i = 0
         for key, value in info.items():
-            v = int((i * 255) / steps)
+            v = int((i * 255) / (steps + 1))
             grey_scale[key] = (v, v, v, 255)
 
             i += 1
 
         grey_scale[asc_file.nodata] = (255, 255, 255, 0)
+        # add a bogus end of frame value to catch all the data
 
-        #wdme_result['data'][name + '.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', name, 'value', grey_scale)
+        v = int((steps * 255) / (steps + 1))
+        grey_scale[9999] = (v, v, v, 0)
+
+        # wdme_result['data'][name + '.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', name, 'value', grey_scale)
         wdme_result['data'][name + '.geojson'] = asc_file.to_geojson('EPSG:3035', grey_scale, name, 'value')
         wdme_result['result']['geojson'].append({'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
 
@@ -187,11 +191,11 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
             v = int((i * 255) / steps)
             grey_scale[key] = (v, v, v, 255)
 
-            i+=1
+            i += 1
 
         grey_scale[asc_file.nodata] = (255, 255, 255, 0)
 
-        #wdme_result['data'][name + '.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', name, 'value', grey_scale)
+        # wdme_result['data'][name + '.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', name, 'value', grey_scale)
         wdme_result['data'][name + '.geojson'] = asc_file.to_geojson('EPSG:3035', grey_scale, name, 'value')
         wdme_result['result']['geojson'].append({'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
 
@@ -205,7 +209,7 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
 
     traffic_lights = wdme_result['result']['traffic_lights']
 
-    #hard-code traffic light results for demo
+    # hard-code traffic light results for demo
     if traffic_lights['current'] == 'green' and traffic_lights['nowcast'] == 'green' and traffic_lights['forecast'] == 'green':
         traffic_lights['text']['current'] = 'No to little rain observed over the past three days suggesting no real issues from flooding currently.'
         traffic_lights['text']['nowcast'] = 'No rain forecast in the next couple of hours, suggesting no impact on current situation.'

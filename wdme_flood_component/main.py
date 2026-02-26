@@ -26,9 +26,6 @@ from starlette.requests import Request
 
 current_results = {}
 
-task = sim_task.SimTask()
-task.start()
-
 
 app = FastAPI(title='Flooding WDME Component', swagger_ui_parameters={"defaultModelsExpandDepth": -1})
 
@@ -42,80 +39,21 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+import scenarios
+import flooding
+app.include_router(scenarios.router)
+app.include_router(flooding.router)
 
 templates = Jinja2Templates(directory="templates")
-
-
-@app.get("/flooding/floodmodel/{filename}")
-def get_flood_model(filename, response: Response):
-    global task
-    try:
-
-        result =  task.get_current_data()
-
-        if 'data' in result and  filename in result['data']:
-            response.status = 200
-            return result['data'][filename]
-
-        response.status = 404
-        return {'No record for: ' + filename}
-
-    except Exception as e:
-        response.status = 500
-        return {unexecore.debug.exception_to_string(e)}
-
-
-@app.get("/flooding/get_flood_data")
-def get_flood_data(response: Response):
-    global task
-    try:
-        response.status = 200
-        result = task.get_current_data()
-        return result['result']
-    except Exception as e:
-        response.status = 500
-        return {unexecore.debug.exception_to_string(e)}
-
-
-from pydantic import BaseModel
-
-
-class TrafficLights(BaseModel):
-    current: str
-    nowcast: str
-    forecast: str
-
-class Item(BaseModel):
-    Last72Hour: float
-    Last24Hour: float
-    Last12Hour: float
-    Last4Hour: float
-    Last2Hour: float
-    LastHour: float
-    Forecast2Hour: float
-    Forecast0To24: float
-    Forecast24To48: float
-    Forecast48To72: float
-    TrafficLights: TrafficLights
-    dateObserved: str
-
-@app.post("/flooding/post_flood_data")
-def post_flood_data(item: Item, request:Request, response: Response):
-    try:
-        global task
-        task.add_work(item.model_dump(), request.url.scheme +'://'+request.url.netloc, timestamp=datetime.datetime.now(datetime.timezone.utc))
-
-        return task.get_current_data()
-    except Exception as e:
-        print(unexecore.debug.exception_to_string(e))
-        response.status_code = 500
-
-    return {}
 
 @app.get("/", include_in_schema=False, response_class=HTMLResponse)
 def read_root(request: Request):
     return templates.TemplateResponse(
         request=request, name="index.html", context={"id": os.environ['MAPBOX_ID']}
     )
-    return FileResponse(os.getcwd() + os.sep + 'static' + os.sep + 'index.html')
 
+@app.get("/testbed", include_in_schema=False, response_class=HTMLResponse)
+def read_root(request: Request):
+    return templates.TemplateResponse(
+        request=request, name="testbed.html"
+    )

@@ -1,5 +1,5 @@
-#docker build -t gaztastic/wdme_flood_component:7 .
-#docker push gaztastic/wdme_flood_component:7
+#docker build -t gaztastic/wdme_flood_component:8 .
+#docker push gaztastic/wdme_flood_component:8
 
 FROM python:3.13
 EXPOSE 9999

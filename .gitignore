@@ -22,3 +22,7 @@ flood_simulation/viz/
 wdme_flood_component/__pycache__/
 
 flood_simulation/flood_simulation.egg-info/
+
+wdme_flood_component/testbed/
+
+wdme_flood_component/output/

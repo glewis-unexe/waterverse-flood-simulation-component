@@ -20,7 +20,7 @@ extra_files = package_files('flood_simulation/data')
 
 setuptools.setup(
     name='flood_simulation',
-    version='2.0.0.1',
+    version='2.0.0.2',
     author='Gareth Lewis',
     author_email='g.lewis2@exeter.ac.uk',
     description='Etteln flood modelling for WATERVERSE project',
