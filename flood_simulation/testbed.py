@@ -7,8 +7,11 @@ import unexecore.debug
 import flood_simulation.rainfall_model
 import flood_simulation.wdme_results
 
+import flood_simulation.weatherapi_model
+
 import json
 import requests
+import time
 
 import waterverse_sdg.sdg as sdg
 
@@ -50,6 +53,8 @@ class etteln_Harness(unexecore.testharness.TestHarness):
                 self.options[str(option_id)] = {'label': 'Call WDME Component Scenario: ' + scenario['name'], 'function': self.call_wdme_flood_component, 'args': {'scenario': scenario['name']}}
                 option_id += 1
 
+            self.options[str(option_id)] = {'label': 'WeatherAPI', 'function': self.weatherapi_model, 'args': {}}
+            option_id += 1
 
         except Exception as e:
             self.log('SDG: Failed to start-up ' + self.pilot + ' ' + unexecore.debug.exception_to_string(e))
@@ -59,22 +64,43 @@ class etteln_Harness(unexecore.testharness.TestHarness):
     def log(self, text):
         print(text)
 
-    def std_model(self, args:dict):
+    def weatherapi_model(self, args:dict):
+        t0 = time.time()
+
         try:
+            model = flood_simulation.weatherapi_model.Weatherapi_Model(output_filepath=self.output_filepath)
+            result = model.run(datetime.datetime.now(datetime.timezone.utc))
+            wdme_results = flood_simulation.wdme_results.create_results(result, 'http://whatever.com')
 
-            sdg.set_current_state(self.pilot, 'test', {"mode": args['scenario']})
-
-            data = sdg.get_data(self.pilot, 'test', 1)
-
-            result = self.model.run(data[0], timestamp=datetime.datetime.now(datetime.timezone.utc))
-            wdme_results = flood_simulation.wdme_results.create_results(result,'http://whatever.com')
-            print(json.dumps(wdme_results, indent=4))
             for item in wdme_results['data']:
                 with open('output' +os.sep + item, "w") as f:
                     json.dump(wdme_results['data'][item], f, indent=4)
 
         except Exception as e:
             self.log(unexecore.debug.exception_to_string(e))
+
+        print('Load:' + str(round(time.time() - t0, 2)))
+
+    def std_model(self, args:dict):
+
+        t0 = time.time()
+
+        try:
+            sdg.set_current_state(self.pilot, 'test', {"mode": args['scenario']})
+
+            data = sdg.get_data(self.pilot, 'test', 1)
+
+            result = self.model.run(data[0], timestamp=datetime.datetime.now(datetime.timezone.utc))
+            wdme_results = flood_simulation.wdme_results.create_results(result,'http://whatever.com')
+            #print(json.dumps(wdme_results, indent=4))
+            for item in wdme_results['data']:
+                with open('output' +os.sep + item, "w") as f:
+                    json.dump(wdme_results['data'][item], f, indent=4)
+
+        except Exception as e:
+            self.log(unexecore.debug.exception_to_string(e))
+
+        print('Load:' + str(round(time.time() - t0,2)) )
 
     def call_wdme_flood_component(self, args:dict):
         try:

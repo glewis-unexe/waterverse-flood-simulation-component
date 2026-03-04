@@ -7,8 +7,11 @@ from urllib import response
 
 import pyproj
 
+import unexecore.ascfile
 import unexecore.file
 import unexecore.time
+
+
 
 class Model:
     def __init__(self, output_filepath: str):
@@ -281,9 +284,6 @@ class Model:
             response['caflood_error'] = 'no valid scenario'
             return response
 
-
-
-
         for sensor in scenario_data:
             current_scenario[sensor] = self.HST_hist_to_timeseries(scenario_data[sensor])
             nowcast_scenario[sensor] = self.HST_nowcast_to_timeseries(scenario_data[sensor])
@@ -313,7 +313,13 @@ class Model:
                      'WDrasterParam.csv'
                      ]
         for file in src_files:
-            shutil.copy(src_root + file, path_name + os.sep + file)
+
+            if '.asc' in file:
+                asc = unexecore.ascfile.ASCFile(src_root + file)
+                new_asc = asc.scale(5)
+                new_asc.save(path_name + os.sep + file)
+            else:
+                shutil.copy(src_root + file, path_name + os.sep + file)
 
         response['caflood_src'] = {}
         response['caflood_src']['dem']  = path_name + os.sep + src_files[0]
