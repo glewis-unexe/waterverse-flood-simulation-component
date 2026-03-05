@@ -18,10 +18,6 @@ origins = [
 
 
 from fastapi.staticfiles import StaticFiles
-
-
-import flood_simulation.rainfall_model
-import flood_simulation.wdme_results
 from starlette.requests import Request
 
 current_results = {}

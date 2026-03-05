@@ -1,4 +1,4 @@
-import flood_simulation.rainfall_model
+import unexe_flood_simulation.rainfall_base
 
 import os
 import json
@@ -12,29 +12,22 @@ import unexecore.file
 import unexecore.time
 import unexecore.debug
 
-def get_data_filename(filename: str) -> str:
-    return os.path.dirname(__file__) + os.sep + 'data' + os.sep + filename
 
-class RainfallBase:
+class Weatherapi_Model(unexe_flood_simulation.rainfall_base.RainfallBase):
     def __init__(self, output_filepath: str):
-        self.land_mask = ''
-        self.roughness = ''
-        self.infiltration = ''
-        self.rain_mask = ''
-        self.dem_model = ''
+        super().__init__(output_filepath)
 
-        self.output_filepath = output_filepath
+        self.land_mask = 'etteln_land_maskv5.asc'
+        self.rain_mask = 'etteln_rain_maskv5.asc'
+        self.dem_model = 'etteln_demv5.asc'
 
-        if self.output_filepath[-1] != os.sep:
-            self.output_filepath += os.sep
+        self.roughness = 'roughnessRates.csv'
+        self.infiltration = 'infiltrationRates.csv'
 
-        if not os.path.exists(self.output_filepath):
-            os.makedirs(self.output_filepath)
-        else:
-            unexecore.file.deltree(self.output_filepath)
 
-        unexecore.file.buildfilepath(self.output_filepath)
+        self.duration_in_days = 3
 
+        self.loc = '51.63, 8.76'
 
     def hist_to_timeseries(self, data: dict) -> dict:
         """
@@ -42,6 +35,12 @@ class RainfallBase:
         """
         timeseries = []
         timeseries.append(0)
+
+        labels = list(data.keys())
+        labels.sort()
+
+        for i in range(0,72):
+            timeseries.append(data[labels[i]] +20)
 
         # add data here
 
@@ -55,6 +54,12 @@ class RainfallBase:
         timeseries.append(0)
 
         # add data here
+        labels = list(data.keys())
+        labels.sort()
+
+        for i in range(72, 74):
+            timeseries.append(data[labels[i]] +20)
+
         return timeseries
 
     def forecast_to_timeseries(self, data: dict) -> dict:
@@ -65,14 +70,62 @@ class RainfallBase:
         timeseries.append(0)
 
         #add data here
+        labels = list(data.keys())
+        labels.sort()
+
+        for i in range(74, 144):
+            timeseries.append(data[labels[i]] +20)
+
         return timeseries
 
-    def get_data(self, timestamp: int) -> dict:
-        return {}
 
+    def get_data(self, current_date:datetime.datetime):
+        rainlist = {}
 
-    def get_path(self) -> str:
-        return os.path.dirname(__file__)
+        try:
+            date = unexecore.time.datetime_to_date(current_date - datetime.timedelta(days=self.duration_in_days))
+
+            weatherapi_now_time = str(current_date.year) + '-' + str(current_date.month).zfill(2) + '-' + str(current_date.day).zfill(2) + ' ' + str(current_date.hour).zfill(2) + ':' + '00'
+
+            request_url = 'http://api.weatherapi.com/v1/history.json?key=' + os.environ['WEATHERAPI_KEY'] + '&q='
+            request_url += self.loc
+            request_url += '&dt=' + date
+            request_url += '&end_dt=' + unexecore.time.datetime_to_date(current_date)
+            request_url += '&aqi=' + 'no'
+            request_url += '&alerts=' + 'no'
+
+            r = requests.get(request_url)
+
+            if r.status_code == 200:
+
+                weather_data = json.loads(r.text)
+                for day in weather_data['forecast']['forecastday']:
+                    for hour in day['hour']:
+                        if hour['time'] < weatherapi_now_time:
+                            rainlist[hour['time']] = hour['precip_mm']
+
+                # forecast
+                request_url = 'http://api.weatherapi.com/v1/forecast.json?key=' + os.environ['WEATHERAPI_KEY'] + '&q='
+                request_url += self.loc
+                request_url += '&days=' + str(self.duration_in_days)
+                request_url += '&aqi=' + 'no'
+                request_url += '&alerts=' + 'no'
+
+                r = requests.get(request_url)
+
+                if r.status_code == 200:
+
+                    weather_data = json.loads(r.text)
+
+                    for day in weather_data['forecast']['forecastday']:
+                        for hour in day['hour']:
+
+                            if hour['time'] >= weatherapi_now_time:
+                                rainlist[hour['time']] = hour['precip_mm']
+        except Exception as e:
+            print(unexecore.debug.exception_to_string(e))
+
+        return rainlist
 
     def run(self, timestamp: datetime.datetime, asc_scale:int=-1):
 
@@ -240,68 +293,3 @@ class RainfallBase:
                     for key in timestamps:
                         response[scenario][key] = root_dir + os.sep + scenario + '_WDrasterParam_' + timestamps[key] + '.asc'
         return response
-
-    def create_scenario_file(self, data: dict, filename: str):
-        with open(filename, 'w') as f:
-            f.write('Name,Spatial Temporal Rain Rates\n')
-            f.write('Number Sequences,' + str(len(data)) + '\n')
-
-            for sensor in data:
-                text = 'Value' + sensor + ' (mm/hr)'
-
-                time_series = data[sensor]
-
-                for i in range(len(time_series)):
-                    text += ', ' + str(time_series[i])
-
-                f.write(text + '\n')
-
-                text = 'Time' + sensor + ' (mm/hr)'
-
-                for i in range(len(time_series)):
-                    text += ', ' + str(i * 3600)
-
-                f.write(text + '\n')
-
-    def create_config(self, path: str, run_name: str, total_time: int, follow_on: bool = False, prev_result_filename: str = ''):
-
-        with open(path + run_name + '_config.csv', 'w') as fp:
-            fp.write('Simulation Name,test2,,' + '\n')
-            fp.write('Short Name (for outputs), ' + run_name + ',,' + '\n')
-            fp.write('Version,1,0,0' + '\n')
-            fp.write('Time Start (seconds),0,,' + '\n')
-            fp.write('Time End   (seconds),' + str(total_time) + ',,' + '\n')
-            fp.write('Max DT (seconds),60,,' + '\n')
-            fp.write('Min DT (seconds),0.01,,' + '\n')
-            fp.write('Update DT (seconds),60,,' + '\n')
-            fp.write('Alpha (Fraction DT 0.0-1.0),0.1,,' + '\n')
-            #            fp.write('Max Iterations,1000000000,,' + '\n')
-            fp.write('Max Iterations,100000000,,' + '\n')
-            fp.write('Roughness Global,0,,' + '\n')
-            fp.write('Roughness Spatial Temporal,' + self.land_mask + ',' + self.roughness + ',\n')
-            fp.write('Infiltration Global (mm/hr),0,,' + '\n')
-            fp.write('Infiltration Spatial Temporal,' + self.land_mask + ',' + self.infiltration + ',\n')
-            fp.write('Ignore WD (meter),0.0001,,' + '\n')
-            fp.write('Tolerance (meter),0.0001,,' + '\n')
-            fp.write('Boundary Ele (Hi/Closed-Lo/Open),-9000,,' + '\n')
-            fp.write('Elevation ASCII,' + self.dem_model + ' ,,\n')
-            fp.write('Water Level Event CSV, ,,' + '\n')
-            fp.write('Inflow Event CSV, ,,' + '\n')
-            fp.write('Raster Grid CSV,WDrasterParam.csv,,' + '\n')
-            fp.write('Output Console, true,,' + '\n')
-            fp.write('Output Period (s),3600,,' + '\n')
-            fp.write('Output Computation Time, true,,' + '\n')
-            fp.write('Check Volumes, true,,' + '\n')
-            fp.write('Remove Proc Data (No Pre-Proc), true,,' + '\n')
-            fp.write('Remove Pre-Proc Data, true,,' + '\n')
-            fp.write('Raster VEL Vector Field, true,,' + '\n')
-            fp.write('Raster WD Tolerance (meter),0,,' + '\n')
-            fp.write('Update Peak Every DT, false,,' + '\n')
-            fp.write('Ignore Upstream, false,,' + '\n')
-            fp.write('Upstream Reduction (meter),1,,' + '\n')
-            fp.write('Raster Decimal Places,2,,' + '\n')
-            fp.write('Rain Spatial Temporal,' + self.rain_mask + ',' + run_name + '_scenario.csv' + '\n')
-
-            # add this for initial depths
-            if follow_on:
-                fp.write('Initial Water Depths,' + prev_result_filename)

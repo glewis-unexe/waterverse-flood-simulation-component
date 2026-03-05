@@ -3,8 +3,8 @@ import threading
 import datetime
 import time
 import os
-import flood_simulation.wdme_results
-import flood_simulation.weatherapi_model
+import unexe_flood_simulation.wdme_results
+import unexe_flood_simulation.weatherapi_model
 import json
 import unexecore.debug
 import unexecore.file
@@ -54,9 +54,9 @@ class SimTask(threading.Thread):
                 print('Running Task')
                 t0 = time.time()
                 output_filepath = os.getcwd() + os.sep + 'sim_output'
-                model = flood_simulation.weatherapi_model.Weatherapi_Model(output_filepath=output_filepath)
-                result = model.run(datetime.datetime.now(datetime.timezone.utc))
-                new_result = flood_simulation.wdme_results.create_results(result, os.environ['APP_URL'])
+                model = unexe_flood_simulation.weatherapi_model.Weatherapi_Model(output_filepath=output_filepath)
+                result = model.run(datetime.datetime.now(datetime.timezone.utc),asc_scale=75)
+                new_result = unexe_flood_simulation.wdme_results.create_results(result, os.environ['APP_URL'])
 
                 timestamp = unexecore.time.fiware_to_datetime(new_result['result']['timestamp'])
 

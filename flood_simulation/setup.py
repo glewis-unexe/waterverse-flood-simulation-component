@@ -15,12 +15,12 @@ def package_files(directory):
                 paths.append(os.path.join('..', path, filename))
     return paths
 
-extra_files = package_files('flood_simulation/data')
+extra_files = package_files('unexe_flood_simulation/data')
 
 
 setuptools.setup(
-    name='flood_simulation',
-    version='2.0.0.3',
+    name='unexe-flood_simulation',
+    version='2.0.0.6',
     author='Gareth Lewis',
     author_email='g.lewis2@exeter.ac.uk',
     description='Etteln flood modelling for WATERVERSE project',
@@ -28,7 +28,7 @@ setuptools.setup(
     long_description_content_type='text/markdown',
     url='https://github.com/pypa/sampleproject',
     # packages=setuptools.find_packages(),
-    packages=['flood_simulation/.'],
+    packages=['unexe_flood_simulation/.'],
     install_requires=['pyproj','pillow','jenkspy'
     ],
     classifiers=[

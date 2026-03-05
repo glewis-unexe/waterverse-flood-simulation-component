@@ -4,10 +4,10 @@ import datetime
 import unexecore.testharness
 import unexecore.debug
 
-import flood_simulation.rainfall_model
-import flood_simulation.wdme_results
+import unexe_flood_simulation.rainfall_model
+import unexe_flood_simulation.wdme_results
 
-import flood_simulation.weatherapi_model
+import unexe_flood_simulation.weatherapi_model
 
 import json
 import requests
@@ -27,7 +27,7 @@ class etteln_Harness(unexecore.testharness.TestHarness):
 
 
         self.output_filepath = os.getcwd() + os.sep + 'output' + os.sep
-        self.model = flood_simulation.rainfall_model.Model(output_filepath=self.output_filepath)
+        self.model = unexe_flood_simulation.rainfall_model.Model(output_filepath=self.output_filepath)
 
         self.pilot = 'etteln'
 
@@ -68,9 +68,9 @@ class etteln_Harness(unexecore.testharness.TestHarness):
         t0 = time.time()
 
         try:
-            model = flood_simulation.weatherapi_model.Weatherapi_Model(output_filepath=self.output_filepath)
+            model = unexe_flood_simulation.weatherapi_model.Weatherapi_Model(output_filepath=self.output_filepath)
             result = model.run(datetime.datetime.now(datetime.timezone.utc),asc_scale=100)
-            wdme_results = flood_simulation.wdme_results.create_results(result, 'http://whatever.com')
+            wdme_results = unexe_flood_simulation.wdme_results.create_results(result, 'http://whatever.com')
 
             for item in wdme_results['data']:
                 with open('output' +os.sep + item, "w") as f:
@@ -91,7 +91,7 @@ class etteln_Harness(unexecore.testharness.TestHarness):
             data = sdg.get_data(self.pilot, 'test', 1)
 
             result = self.model.run(data[0], timestamp=datetime.datetime.now(datetime.timezone.utc))
-            wdme_results = flood_simulation.wdme_results.create_results(result,'http://whatever.com')
+            wdme_results = unexe_flood_simulation.wdme_results.create_results(result, 'http://whatever.com')
             #print(json.dumps(wdme_results, indent=4))
             for item in wdme_results['data']:
                 with open('output' +os.sep + item, "w") as f:
