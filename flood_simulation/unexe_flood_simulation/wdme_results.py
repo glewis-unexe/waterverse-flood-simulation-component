@@ -26,7 +26,7 @@ def asc_get_info(asc_file: unexecore.ascfile.ASCFile) -> dict:
     return info
 
 
-def create_results(flood_result: dict, server_path: str = None) -> dict:
+def create_results(flood_result: dict, source_coords:str = None, flip_coords=True, server_path: str = None) -> dict:
     wdme_result = {
         # results to return to user
         'result':
@@ -119,10 +119,8 @@ def create_results(flood_result: dict, server_path: str = None) -> dict:
 
                     if json_key == 'forecast':
                         json_key = item
-
-                    # wdme_result['data'][label+'.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', 'flood-map', 'depth', colour_lookup)
-
-                    wdme_result['data'][label + '.geojson'] = asc_file.to_geojson('EPSG:3035', colour_lookup, 'flood-map', 'depth')
+                    
+                    wdme_result['data'][label + '.geojson'] = asc_file.to_geojson(source_coords, colour_lookup, 'flood-map', 'depth',flip_coords=flip_coords)
 
                     wdme_result['result']['geojson'].append({'type': json_key, 'url': server_path + '/flooding/floodmodel/' + label + '.geojson'})
                 except  Exception as e:
@@ -146,8 +144,8 @@ def create_results(flood_result: dict, server_path: str = None) -> dict:
 
         grey_scale[asc_file.nodata] = (255, 255, 255, 0)
 
-        # wdme_result['data'][name + '.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', name, 'value', grey_scale)
-        wdme_result['data'][name + '.geojson'] = asc_file.to_geojson('EPSG:3035', grey_scale, name)
+        
+        wdme_result['data'][name + '.geojson'] = asc_file.to_geojson(source_coords, grey_scale, name,flip_coords=flip_coords)
         wdme_result['result']['geojson'].append({'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
 
         # convert landuse into lookups
@@ -172,8 +170,8 @@ def create_results(flood_result: dict, server_path: str = None) -> dict:
         v = int((steps * 255) / (steps + 1))
         grey_scale[9999] = (v, v, v, 0)
 
-        # wdme_result['data'][name + '.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', name, 'value', grey_scale)
-        wdme_result['data'][name + '.geojson'] = asc_file.to_geojson('EPSG:3035', grey_scale, name, 'value')
+
+        wdme_result['data'][name + '.geojson'] = asc_file.to_geojson(source_coords, grey_scale, name, 'value',flip_coords=flip_coords)
         wdme_result['result']['geojson'].append({'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
 
         # convert rain sensor regions into lookup
@@ -193,8 +191,8 @@ def create_results(flood_result: dict, server_path: str = None) -> dict:
 
         grey_scale[asc_file.nodata] = (255, 255, 255, 0)
 
-        # wdme_result['data'][name + '.geojson'] = flood_simulation.visualisation.asc_to_geojson(asc_file, 'EPSG:3035', 'EPSG:4326', name, 'value', grey_scale)
-        wdme_result['data'][name + '.geojson'] = asc_file.to_geojson('EPSG:3035', grey_scale, name, 'value')
+
+        wdme_result['data'][name + '.geojson'] = asc_file.to_geojson(source_coords, grey_scale, name, 'value',flip_coords=flip_coords)
         wdme_result['result']['geojson'].append({'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
 
     if 'TrafficLights' in flood_result:
