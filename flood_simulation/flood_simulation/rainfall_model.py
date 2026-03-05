@@ -15,11 +15,11 @@ import unexecore.time
 
 class Model:
     def __init__(self, output_filepath: str):
-        self.land_mask = 'etteln_land_maskv5.asc'
+        self.land_mask = 'etteln_land_maskv5-100.asc'
         self.roughness = 'roughnessRates.csv'
         self.infiltration = 'infiltrationRates.csv'
         self.rain_mask = 'etteln_rain_maskv5.asc'
-        self.dem_model = 'etteln_demv5.asc'
+        self.dem_model = 'etteln_demv5-100.asc'
 
         self.output_filepath = output_filepath
 
@@ -305,8 +305,8 @@ class Model:
 
         src_root = self.get_path() + os.sep + 'data/CaddiesInput/'
 
-        src_files = ['etteln_demv5.asc',
-                     'etteln_land_maskv5.asc',
+        src_files = ['etteln_demv5-100.asc',
+                     'etteln_land_maskv5-100.asc',
                      'etteln_rain_maskv5.asc',
                      'infiltrationRates.csv',
                      'roughnessRates.csv',

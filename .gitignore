@@ -26,3 +26,9 @@ flood_simulation/flood_simulation.egg-info/
 wdme_flood_component/testbed/
 
 wdme_flood_component/output/
+
+flood_simulation/flood_simulation/data/CaddiesInput/etteln_demv5-100.asc
+
+flood_simulation/flood_simulation/data/CaddiesInput/etteln_land_maskv5-100.asc
+
+flood_simulation/flood_simulation/data/CaddiesInput/etteln_rain_maskv5-100.asc

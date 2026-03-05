@@ -108,8 +108,6 @@ def create_results(flood_result: dict, server_path: str = None) -> dict:
         for key, value in work_list.items():
             for item in value:
                 try:
-                    #print('Loading: ' + flood_result[key][item])
-                    # asc_file.loadASC(flood_result[key][item])
                     asc_file.load(flood_result[key][item])
 
                     name = key + '_' + item

@@ -1,13 +1,14 @@
 import copy
-import queue
 import threading
 import datetime
 import time
 import os
-import flood_simulation
+import flood_simulation.wdme_results
+import flood_simulation.weatherapi_model
 import json
 import unexecore.debug
 import unexecore.file
+import unexecore.time
 
 
 class SimTask(threading.Thread):
@@ -47,45 +48,42 @@ class SimTask(threading.Thread):
         self.thread.start()
 
 
-    def add_work(self, data: dict, url_root:str, timestamp: datetime.datetime) -> None:
-        self.work_queue.append({'data': data, 'timestamp': timestamp, 'url_root': url_root})
-
     def run(self):
         while self.running:
-            if len(self.work_queue) > 0:
-                try:
-                    print('Running Task')
-                    item = self.work_queue.pop(0)
+            try:
+                print('Running Task')
+                t0 = time.time()
+                output_filepath = os.getcwd() + os.sep + 'sim_output'
+                model = flood_simulation.weatherapi_model.Weatherapi_Model(output_filepath=output_filepath)
+                result = model.run(datetime.datetime.now(datetime.timezone.utc))
+                new_result = flood_simulation.wdme_results.create_results(result, os.environ['APP_URL'])
 
-                    output_filepath = os.getcwd() + os.sep + 'sim_output'
-                    model = flood_simulation.rainfall_model.Model(output_filepath=output_filepath)
-                    result = model.run(item['data'], timestamp=item['timestamp'])
-                    new_result = flood_simulation.wdme_results.create_results(result, item['url_root'])
+                timestamp = unexecore.time.fiware_to_datetime(new_result['result']['timestamp'])
 
-                    print('Running Task - Finished')
+                new_result['result']['TOS'] = str(timestamp.year) +'-'+ str(timestamp.month).zfill(2) + '-'+str(timestamp.day).zfill(2) +' ' + str(timestamp.hour).zfill(2) +':' +'00'
 
-                    while self.lock:
-                        time.sleep(0.01)
+                print('Running Task - Finished:' + str(round(time.time() - t0, 2)))
 
-                    self.lock = True
-                    self.current_results = copy.deepcopy(new_result)
-                    self.lock = False
+                while self.lock:
+                    time.sleep(0.01)
 
-                    for item in new_result['data']:
-                        path = os.getcwd() + os.sep + 'output' + os.sep
-                        unexecore.file.buildfilepath(path)
-                        with open(path + item, "w") as f:
-                            json.dump(new_result['data'][item], f, indent=4)
+                self.lock = True
+                self.current_results = copy.deepcopy(new_result)
+                self.lock = False
 
-                    print('Running Task - Written Results')
-                except Exception as e:
-                    print(unexecore.debug.exception_to_string(e))
-                    print('Running Task - Failed')
-                    self.lock = False
+                for item in new_result['data']:
+                    path = os.getcwd() + os.sep + 'output' + os.sep
+                    unexecore.file.buildfilepath(path)
+                    with open(path + item, "w") as f:
+                        json.dump(new_result['data'][item], f, indent=4)
 
-            time.sleep(1)
+                print('Running Task - Written Results')
+            except Exception as e:
+                print(unexecore.debug.exception_to_string(e))
+                print('Running Task - Failed')
+                self.lock = False
 
-
+            time.sleep(5*60)
 task = SimTask()
 task.start()
 

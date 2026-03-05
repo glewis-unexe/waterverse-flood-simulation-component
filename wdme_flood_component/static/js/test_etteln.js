@@ -84,7 +84,7 @@ class FloodMapComponent  extends MapboxComponent {
             }
 
             if ('map.info.textbox' in this.elements) {
-                this.elements['map.info.textbox'].set_text(text);
+                this.elements['map.info.textbox'].set_text( app.getTOD() + '\n'+text);
             }
         };
     }
@@ -136,16 +136,16 @@ class FloodMapComponent  extends MapboxComponent {
                         let temp = [];
                         temp.push({name: 'none', layer: undefined});
 
-                        let print_timestamp = '';
-
-                        if ('timestamp_print' in record){
-                            print_timestamp = record['timestamp_print'];
+                        if ('TOS' in record){
+                            app.tos = record['TOS'];
+                        }else{
+                            app.tos = '2026-03-04 11:00'
                         }
 
                         if ('geojson' in record){
                             for (let i = 0; i < record['geojson'].length; i++) {
                                 let current = record['geojson'][i];
-                                let layer_name = print_timestamp + ' ' + current.type + ' floodmap';
+                                let layer_name = current.type + ' floodmap';
                                 let layer = new MapboxLayer_Geojson(layer_name, current.url, false);
 
                                 layer.paint_data = {
@@ -360,6 +360,7 @@ class AppScreen extends Screen_base
 
 
         this.data = {};
+        this.tos = '1970-01-01 00:00';
 
         this.components = {};
         this.components['Map View'] = new FloodMapComponent();
@@ -404,6 +405,10 @@ class AppScreen extends Screen_base
         if(item_id in this.components) {
             this.components[item_id].onShow(this.content_root);
         }
+    }
+
+    getTOD(){
+        return this.tos;
     }
 }
 

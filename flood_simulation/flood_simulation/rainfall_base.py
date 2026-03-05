@@ -17,11 +17,11 @@ def get_data_filename(filename: str) -> str:
 
 class RainfallBase:
     def __init__(self, output_filepath: str):
-        self.land_mask = 'etteln_land_maskv5.asc'
-        self.roughness = 'roughnessRates.csv'
-        self.infiltration = 'infiltrationRates.csv'
-        self.rain_mask = 'etteln_rain_maskv5.asc'
-        self.dem_model = 'etteln_demv5.asc'
+        self.land_mask = ''
+        self.roughness = ''
+        self.infiltration = ''
+        self.rain_mask = ''
+        self.dem_model = ''
 
         self.output_filepath = output_filepath
 

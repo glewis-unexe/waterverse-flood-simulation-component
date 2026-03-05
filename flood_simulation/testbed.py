@@ -69,7 +69,7 @@ class etteln_Harness(unexecore.testharness.TestHarness):
 
         try:
             model = flood_simulation.weatherapi_model.Weatherapi_Model(output_filepath=self.output_filepath)
-            result = model.run(datetime.datetime.now(datetime.timezone.utc))
+            result = model.run(datetime.datetime.now(datetime.timezone.utc),asc_scale=100)
             wdme_results = flood_simulation.wdme_results.create_results(result, 'http://whatever.com')
 
             for item in wdme_results['data']:

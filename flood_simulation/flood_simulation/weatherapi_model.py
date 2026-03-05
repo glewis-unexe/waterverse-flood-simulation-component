@@ -1,4 +1,4 @@
-import flood_simulation.rainfall_model
+import flood_simulation.rainfall_base
 
 import os
 import json
@@ -13,9 +13,17 @@ import unexecore.time
 import unexecore.debug
 
 
-class Weatherapi_Model(flood_simulation.rainfall_model.Model):
+class Weatherapi_Model(flood_simulation.rainfall_base.RainfallBase):
     def __init__(self, output_filepath: str):
         super().__init__(output_filepath)
+
+        self.land_mask = 'etteln_land_maskv5.asc'
+        self.rain_mask = 'etteln_rain_maskv5.asc'
+        self.dem_model = 'etteln_demv5-100.asc'
+
+        self.roughness = 'roughnessRates.csv'
+        self.infiltration = 'infiltrationRates.csv'
+
 
         self.duration_in_days = 3
 
@@ -32,7 +40,7 @@ class Weatherapi_Model(flood_simulation.rainfall_model.Model):
         labels.sort()
 
         for i in range(0,72):
-            timeseries.append(data[labels[i]] +10)
+            timeseries.append(data[labels[i]] +20)
 
         # add data here
 
@@ -50,7 +58,7 @@ class Weatherapi_Model(flood_simulation.rainfall_model.Model):
         labels.sort()
 
         for i in range(72, 74):
-            timeseries.append(data[labels[i]] +10)
+            timeseries.append(data[labels[i]] +20)
 
         return timeseries
 
@@ -66,7 +74,7 @@ class Weatherapi_Model(flood_simulation.rainfall_model.Model):
         labels.sort()
 
         for i in range(74, 144):
-            timeseries.append(data[labels[i]] +10)
+            timeseries.append(data[labels[i]] +20)
 
         return timeseries
 

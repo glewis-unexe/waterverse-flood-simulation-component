@@ -40,38 +40,3 @@ def get_flood_data(response: Response):
     except Exception as e:
         response.status = 500
         return {unexecore.debug.exception_to_string(e)}
-
-
-from pydantic import BaseModel
-
-
-class TrafficLights(BaseModel):
-    current: str
-    nowcast: str
-    forecast: str
-
-class Item(BaseModel):
-    Last72Hour: float
-    Last24Hour: float
-    Last12Hour: float
-    Last4Hour: float
-    Last2Hour: float
-    LastHour: float
-    Forecast2Hour: float
-    Forecast0To24: float
-    Forecast24To48: float
-    Forecast48To72: float
-    TrafficLights: TrafficLights
-    dateObserved: str
-
-@router.post("/flooding/post_flood_data")
-def post_flood_data(item: Item, request:Request, response: Response):
-    try:
-        sim_task.task.add_work(item.model_dump(), request.url.scheme +'://'+request.url.netloc, timestamp=datetime.datetime.now(datetime.timezone.utc))
-
-        return sim_task.task.get_current_data()
-    except Exception as e:
-        print(unexecore.debug.exception_to_string(e))
-        response.status_code = 500
-
-    return {}
