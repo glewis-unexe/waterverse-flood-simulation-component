@@ -79,7 +79,7 @@ class Weatherapi_Model(unexe_flood_simulation.rainfall_base.RainfallBase):
         return timeseries
 
 
-    def get_data(self, current_date:datetime.datetime):
+    def get_data(self, current_date:datetime.datetime) -> dict:
         rainlist = {}
 
         try:
