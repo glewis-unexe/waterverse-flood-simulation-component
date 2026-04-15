@@ -314,9 +314,9 @@ class Model:
                      ]
         for file in src_files:
 
-            if '.asc' in file:
+            if False and ('.asc' in file):
                 asc = unexecore.ascfile.ASCFile(src_root + file)
-                new_asc = asc.scale(5)
+                new_asc = asc.scale(30)
                 new_asc.save(path_name + os.sep + file)
             else:
                 shutil.copy(src_root + file, path_name + os.sep + file)

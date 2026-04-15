@@ -199,7 +199,22 @@ class WeatherapiModel2 (unexe_flood_simulation.weatherapi_model.Weatherapi_Model
 
 
 class EttelnTestData(WeatherapiModel2):
-    rainlist = {}
+    def __init__(self, output_filepath: str):
+
+        super().__init__(output_filepath)
+
+        self.land_mask = 'etteln_land_maskv5.asc'
+        self.rain_mask = 'etteln_rain_maskv5.asc'
+        self.dem_model = 'etteln_demv5.asc'
+
+        self.roughness = 'roughnessRates.csv'
+        self.infiltration = 'infiltrationRates.csv'
+
+        self.duration_in_days = 3
+
+        self.loc = '51.63, 8.76'
+        self.rainlist = {}
+
     def get_data(self, current_date:datetime.datetime):
 
         #this needs to return 144 timestamp data points
@@ -348,6 +363,26 @@ class etteln_Harness(unexecore.testharness.TestHarness):
 
         return 'Unsettled'
 
+    def summarise_flood_map_info(self, info:dict) -> str:
+
+        keys = list(info.keys())
+
+        passable = 0 # < 0.1m ?
+        caution = 0 #  < 0.3m
+        flooded = 0 # > 0.3m
+
+        for key in keys:
+            if key <= 0.1:
+                passable += info[key]
+            else:
+                if key <= 0.3:
+                    caution += info[key]
+                else:
+                    flooded += info[key]
+
+        return  'passable: ' + str(passable) +' caution: ' +str(caution) +' flooded: ' + str(flooded) + ' of' + str(passable+caution+flooded)
+
+
 
     def std_model(self, args:dict):
 
@@ -399,12 +434,32 @@ class etteln_Harness(unexecore.testharness.TestHarness):
 
                 print(r['label'] + ' ' + str(info) + ' ' + self.summarise_info(info))
 
-            if False:
-                result = model.run(timestamp=current_date)
-                wdme_results = unexe_flood_simulation.wdme_results.create_results(result, 'http://whatever.com')
+            resolutions = [20,30,50,100,250]
+
+            for res in resolutions:
+                t1 = time.time()
+                result = model.run(timestamp=current_date,asc_scale=res)
+                print(str(res)+'m took:' + str(round(time.time() - t1, 2)))
+
+            if False: #generate output data?
+                wdme_results = unexe_flood_simulation.wdme_results.create_results(result, source_coords='EPSG:3035', flip_coords=False, server_path='http://whatever.com')
                 for item in wdme_results['data']:
                     with open(output_filepath + item, "w") as f:
                         json.dump(wdme_results['data'][item], f, indent=4)
+
+                        info = {}
+
+                        for feature in wdme_results['data'][item]['features']:
+
+                            if 'depth' in feature['properties']:
+                                val = feature['properties']['depth']
+                                if val not in info:
+                                    info[val] = 0
+
+                                info[val] += 1
+
+                        if info != {}:
+                            print(item + ' ' + self.summarise_flood_map_info(info))
 
         except Exception as e:
             self.log(unexecore.debug.exception_to_string(e))

@@ -91,7 +91,7 @@ class etteln_Harness(unexecore.testharness.TestHarness):
             data = sdg.get_data(self.pilot, 'test', 1)
 
             result = self.model.run(data[0], timestamp=datetime.datetime.now(datetime.timezone.utc))
-            wdme_results = unexe_flood_simulation.wdme_results.create_results(result, 'http://whatever.com')
+            wdme_results = unexe_flood_simulation.wdme_results.create_results(result, source_coords='EPSG:3035', flip_coords=False, server_path='http://whatever.com')
             #print(json.dumps(wdme_results, indent=4))
             for item in wdme_results['data']:
                 with open('output' +os.sep + item, "w") as f:

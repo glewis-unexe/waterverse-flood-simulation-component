@@ -36,3 +36,5 @@ flood_simulation/flood_simulation/data/CaddiesInput/etteln_rain_maskv5-100.asc
 flood_simulation/unexe_flood_simulation/__pycache__/
 
 flood_simulation/torbay/output/
+
+flood_simulation/etteln/WeatherAnalysis/
