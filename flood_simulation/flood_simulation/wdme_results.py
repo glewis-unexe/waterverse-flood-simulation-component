@@ -130,12 +130,16 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
 
         i = 0
         for key, value in info.items():
-            v = int((i * 255) / steps)
+            v = int((i * 255) / (steps+1) )
             grey_scale[key] = (v, v, v, 255)
 
             i += 1
 
         grey_scale[asc_file.nodata] = (255, 255, 255, 0)
+
+        # add a bogus end of frame value to catch all the data
+        v = int((steps * 255) / (steps + 1))
+        grey_scale[9999] = (v, v, v, 0)
 
         wdme_result['data'][name + '.geojson'] = asc_file.to_geojson('EPSG:3035', colourLookup=grey_scale, label=name, attrib_label='value')
         wdme_result['result']['geojson'].append({'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
