@@ -2,5 +2,9 @@ setuptools
 pillow
 jenkspy
 pytest
+requests
+pyproj
+rasterio
 
-./packages/unexecore-1.0.0.4-py3-none-any.whl
+./packages/unexecore-44.0.0.8-py3-none-any.whl
+./packages/waterverse_sdg-1.0.0.3-py3-none-any.whl
