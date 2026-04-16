@@ -20,10 +20,10 @@ extra_files = package_files('flood_simulation/data')
 
 setuptools.setup(
     name='flood_simulation',
-    version='1.0.0.2',
+    version='44.0.0.1',
     author='Gareth Lewis',
     author_email='g.lewis2@exeter.ac.uk',
-    description='Etteln flood modelling for WATERVERSE project',
+    description='Flood simulation package',
     long_description='',
     long_description_content_type='text/markdown',
     url='https://github.com/pypa/sampleproject',

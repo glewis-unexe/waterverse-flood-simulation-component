@@ -400,6 +400,9 @@ let app = new AppScreen();
 
 function app_init(root) {
   let content_root = document.createElement('div');
+
+  mapboxgl.accessToken = "pk.eyJ1IjoiZ2F6dGFzdGljIiwiYSI6ImNrYzA4Y2c4NjFoYnIyeHRicmZuaTgyMGQifQ.fkkbIOCwq4j70CqNeiBGcA";
+
   content_root.style.left = '0px';
   content_root.style.margin = '0';
   content_root.style.padding = '0';

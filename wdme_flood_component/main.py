@@ -3,6 +3,10 @@ import os
 import json
 
 import unexecore.debug
+import flood_thread
+
+flood_service = flood_thread.ThreadedService()
+flood_service.init()
 
 from fastapi import FastAPI, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,11 +42,12 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/flooding/floodmodel/{filename}")
-async def get_flood_model(filename, response: Response):
+def get_flood_model(filename, response: Response):
     try:
-        global current_results
-        if filename in current_results['data']:
-            return current_results['data'][filename]
+        result = flood_service.get_flood_model(filename)
+
+        if(len(result) > 0):
+            return result
 
     except Exception as e:
         response.status = 500
@@ -52,13 +57,8 @@ async def get_flood_model(filename, response: Response):
     return {'No record for: ' + filename}
 
 @app.get("/flooding/get_flood_data")
-async def get_flood_data():
-    global current_results
-
-    if 'result' in current_results:
-        return current_results['result']
-
-    return {}
+def get_flood_data():
+    return flood_service.get_current_results()
 
 
 from pydantic import BaseModel
@@ -84,18 +84,12 @@ class Item(BaseModel):
     dateObserved: str
 
 @app.post("/flooding/post_flood_data")
-async def post_flood_data(item: Item, request:Request, response: Response):
+def post_flood_data(item: Item, request:Request, response: Response):
 
-    output_filepath = os.getcwd() + os.sep + 'sim_output'
-    model = flood_simulation.rainfall_model.Model(output_filepath=output_filepath)
 
     try:
-        result = model.run(item.model_dump(), timestamp=datetime.datetime.now(datetime.timezone.utc))
-
-        global current_results
-        current_results = flood_simulation.wdme_results.create_results(result, request.url.scheme +'://'+request.url.netloc)
-
-        return current_results['result']
+        flood_service.add_data(item.model_dump(), timestamp=datetime.datetime.now(datetime.timezone.utc), url=request.url.scheme + '://' + request.url.netloc)
+        return flood_service.get_current_results()
 
     except Exception as e:
         print(unexecore.debug.exception_to_string(e))
