@@ -312,10 +312,14 @@ class simulation_Harness(unexecore.testharness.TestHarness):
                 },
                 "dateObserved": timestamp
             }
-            result = model.run(data, timestamp= timestamp,asc_scale=200)
+            result = model.run(data, timestamp= timestamp,asc_scale=400)
 
-            current_results = flood_simulation.wdme_results.create_results(result, 'http://test.com')
+            wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:27700',  server_path='http://test.com', flip_coords=True)
             print()
+
+            for item in wdme_results['data']:
+                with open(output_filepath + item, "w") as f:
+                    json.dump(wdme_results['data'][item], f, indent=4)
 
 
         except Exception as e:
@@ -348,8 +352,13 @@ class simulation_Harness(unexecore.testharness.TestHarness):
             }
             result = model.run(data, timestamp= timestamp)
 
-            current_results = flood_simulation.wdme_results.create_results(result, 'http://test.com')
-            print()
+            wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:3035', server_path='http://test-etteln.com',flip_coords=False)
+
+
+            for item in wdme_results['data']:
+                with open(output_filepath + item, "w") as f:
+                    json.dump(wdme_results['data'][item], f, indent=4)
+
 
 
         except Exception as e:
