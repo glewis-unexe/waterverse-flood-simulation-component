@@ -312,7 +312,7 @@ class simulation_Harness(unexecore.testharness.TestHarness):
                 },
                 "dateObserved": timestamp
             }
-            result = model.run(data, timestamp= timestamp,asc_scale=400)
+            result = model.run(data, timestamp= timestamp,asc_scale=100)
 
             wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:27700',  server_path='http://test.com', flip_coords=True)
             print()
