@@ -1,14 +1,19 @@
 import os
 import datetime
+import inspect
 
 import unexecore.testharness
 import unexecore.debug
+import unexecore.logger
 import unexecore.time
 
 import flood_simulation.rainfall_model
 import flood_simulation.wdme_results
 
 import json
+
+from pip._internal.commands import inspect
+
 
 class EttelnModel(flood_simulation.rainfall_model.Model):
     def __init__(self, output_filepath:str):
@@ -73,8 +78,6 @@ class EttelnModel(flood_simulation.rainfall_model.Model):
                 return False
 
         return True
-
-
 
     def HST_hist_to_timeseries(self, data: dict) -> dict:
 
@@ -194,17 +197,18 @@ class EttelnModel(flood_simulation.rainfall_model.Model):
 
         return sensible_data
 
-class TorbayModel(flood_simulation.rainfall_model.Model):
+class TorbayModel(EttelnModel):
     def __init__(self, output_filepath:str):
         super().__init__(output_filepath)
 
-        self.dem_model = 'etteln_demv5.asc'
-        self.land_mask = 'etteln_land_maskv5.asc'
-        self.rain_mask = 'etteln_rain_maskv5.asc'
-        self.infiltration = 'infiltrationRates.csv'
-        self.roughness = 'roughnessRates.csv'
+        self.land_mask = 'catchment_landcover_8m.asc'
+        self.rain_mask = 'catchment_mask_8m.asc'
+        self.dem_model = 'catchment_dem_8m.asc'
 
-        self.location_src_root = os.getcwd() + os.sep + 'locations/etteln/'
+        self.roughness = 'roughnesses.csv'
+        self.infiltration = 'infiltration.csv'
+
+        self.location_src_root = os.getcwd() + os.sep + 'locations/torbay/'
 
     def setup_rainfall_scenario_data(self, result:dict):
         scenario_data = {}
@@ -237,11 +241,8 @@ class TorbayModel(flood_simulation.rainfall_model.Model):
                         result = result['sensors'][-1]
 
                 scenario_data = {
-                    '2169': result,
-                    '2172': result,
-                    '2173': result,
-                    '2174': result,
-                    '2175': result
+                    #'3': result, #3 is the mask
+                    '1': result,
                 }
 
             except Exception as e:
@@ -253,7 +254,7 @@ class TorbayModel(flood_simulation.rainfall_model.Model):
                 self.nowcast_scenario[sensor] = self.HST_nowcast_to_timeseries(scenario_data[sensor])
                 self.forecast_scenario[sensor] = self.HST_forecast_to_timeseries(scenario_data[sensor])
         except Exception as e:
-                self.log(unexecore.debug.exception_to_string(e))
+                unexecore.logger.logger.log(inspect.currentframe(),unexecore.debug.exception_to_string(e))
                 return False
 
         return True
@@ -279,7 +280,7 @@ class simulation_Harness(unexecore.testharness.TestHarness):
 
 
         except Exception as e:
-            self.log(unexecore.debug.exception_to_string(e))
+            unexecore.logger.logger.log(inspect.currentframe(),unexecore.debug.exception_to_string(e))
 
 
 
@@ -311,14 +312,14 @@ class simulation_Harness(unexecore.testharness.TestHarness):
                 },
                 "dateObserved": timestamp
             }
-            result = model.run(data, timestamp= timestamp)
+            result = model.run(data, timestamp= timestamp,asc_scale=200)
 
             current_results = flood_simulation.wdme_results.create_results(result, 'http://test.com')
             print()
 
 
         except Exception as e:
-            self.log(unexecore.debug.exception_to_string(e))
+            unexecore.logger.logger.log(inspect.currentframe(), unexecore.debug.exception_to_string(e))
 
     def etteln_model(self, args:dict):
         try:
