@@ -2,44 +2,45 @@ import math
 import unexecore.file
 import unexecore.ascfile
 
-def create_results(flood_result:dict, server_path:str=None) -> dict:
+
+def create_results(flood_result: dict, src_coords: str, server_path: str = None, flip_coords: bool = False) -> dict:
     wdme_result = {
-        #results to return to user
+        # results to return to user
         'result':
-        {
-            "timestamp": flood_result["timestamp"],
-            "traffic_lights": {
-                "current": "<set>",
-                "nowcast": "<set>",
-                "forecast": "<set>",
-                "text": {
-                    "current": 'Not known at this time',
-                    "nowcast": 'Not known at this time',
-                    "forecast": 'Not known at this time'
-                }
+            {
+                "timestamp": flood_result["timestamp"],
+                "traffic_lights": {
+                    "current": "<set>",
+                    "nowcast": "<set>",
+                    "forecast": "<set>",
+                    "text": {
+                        "current": 'Not known at this time',
+                        "nowcast": 'Not known at this time',
+                        "forecast": 'Not known at this time'
+                    }
+                },
+                "color_key": [
+                    {
+                        "text": "<0.1m",
+                        "color": "#ffffff"
+                    },
+                    {
+                        "text": "0.1-0.3m",
+                        "color": "#ff8c00"
+                    },
+                    {
+                        "text": ">0.3m",
+                        "color": "#ff1414"
+                    }
+                ],
+                "geojson": []
             },
-            "color_key": [
-                {
-                    "text": "<0.1m",
-                    "color": "#ffffff"
-                },
-                {
-                    "text": "0.1-0.3m",
-                    "color": "#ff8c00"
-                },
-                {
-                    "text": ">0.3m",
-                    "color": "#ff1414"
-                }
-            ],
-            "geojson": []
-        },
-        #data to return through API call
-        'data':{
+        # data to return through API call
+        'data': {
         }
     }
 
-    #this should be the blue scale that is normally used
+    # this should be the blue scale that is normally used
     wdme_result['result']['color_key'] = [
         {
             "text": "<0.1m",
@@ -68,7 +69,7 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
     ]
 
     if server_path != None:
-        #convert rainfall ASC data into geojson
+        # convert rainfall ASC data into geojson
         work_list = {'current': ['peak'], 'nowcast': ['peak'], 'forecast': ['1day', '2day', 'end']}
 
         colour_lookup = {}
@@ -94,8 +95,11 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
                 if json_key == 'forecast':
                     json_key = item
 
-                wdme_result['data'][label+'.geojson'] = asc_file.to_geojson( 'EPSG:3035', colourLookup=colour_lookup,  label='flood-map', attrib_label='depth')
-                wdme_result['result']['geojson'].append({'type':json_key, 'url': server_path+'/flooding/floodmodel/'+ label+'.geojson'})
+                wdme_result['data'][label + '.geojson'] = asc_file.to_geojson(src_coords, colourLookup=colour_lookup,
+                                                                              label='flood-map', attrib_label='depth',
+                                                                              flip_coords=flip_coords)
+                wdme_result['result']['geojson'].append(
+                    {'type': json_key, 'url': server_path + '/flooding/floodmodel/' + label + '.geojson'})
 
         # convert DEM model into greyscale
         name = 'dem'
@@ -103,21 +107,23 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
         asc_file.load(flood_result['caflood_src']['dem'])
         info = asc_file.get_histo()
 
-        smallest = math.floor(min(info.keys())-1)
-        largest = math.floor(max(info.keys())+1)
+        smallest = math.floor(min(info.keys()) - 1)
+        largest = math.floor(max(info.keys()) + 1)
 
         num_range = largest - smallest
 
         grey_scale = {}
         steps = 32
         for i in range(steps):
-            v = int((i*255)/steps)
-            grey_scale[smallest + ((i*num_range)/steps)] = (v,v,v,255)
+            v = int((i * 255) / steps)
+            grey_scale[smallest + ((i * num_range) / steps)] = (v, v, v, 255)
 
-        grey_scale[asc_file.nodata] = (255,255,255,0)
+        grey_scale[asc_file.nodata] = (255, 255, 255, 0)
 
-        wdme_result['data'][name + '.geojson'] = asc_file.to_geojson('EPSG:3035', colourLookup=grey_scale, label=name, attrib_label='value')
-        wdme_result['result']['geojson'].append({'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
+        wdme_result['data'][name + '.geojson'] = asc_file.to_geojson(src_coords, colourLookup=grey_scale, label=name,
+                                                                     attrib_label='value', flip_coords=flip_coords)
+        wdme_result['result']['geojson'].append(
+            {'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
 
         # convert landuse into lookups
         name = 'land'
@@ -130,7 +136,7 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
 
         i = 0
         for key, value in info.items():
-            v = int((i * 255) / (steps+1) )
+            v = int((i * 255) / (steps + 1))
             grey_scale[key] = (v, v, v, 255)
 
             i += 1
@@ -141,8 +147,10 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
         v = int((steps * 255) / (steps + 1))
         grey_scale[9999] = (v, v, v, 0)
 
-        wdme_result['data'][name + '.geojson'] = asc_file.to_geojson('EPSG:3035', colourLookup=grey_scale, label=name, attrib_label='value')
-        wdme_result['result']['geojson'].append({'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
+        wdme_result['data'][name + '.geojson'] = asc_file.to_geojson(src_coords, colourLookup=grey_scale, label=name,
+                                                                     attrib_label='value', flip_coords=flip_coords)
+        wdme_result['result']['geojson'].append(
+            {'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
 
         # convert rain sensor regions into lookup
         name = 'rain'
@@ -153,17 +161,27 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
         grey_scale = {}
         steps = len(info.keys())
 
+        # qdd a bogus start vlaue for rain maps that only have 1 sensor
+        first_val = sorted(info.keys())[0]
+        first_val -= 1
+        grey_scale[first_val] = (255, 255, 255, 0)
+
         i = 0
         for key, value in info.items():
             v = int((i * 255) / steps)
             grey_scale[key] = (v, v, v, 255)
 
-            i+=1
+            i += 1
 
         grey_scale[asc_file.nodata] = (255, 255, 255, 0)
+        # add a bogus end of frame value to catch all the data
+        v = int((steps * 255) / (steps + 1))
+        grey_scale[9999] = (v, v, v, 0)
 
-        wdme_result['data'][name + '.geojson'] = asc_file.to_geojson('EPSG:3035', colourLookup=grey_scale, label=name, attrib_label='value')
-        wdme_result['result']['geojson'].append({'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
+        wdme_result['data'][name + '.geojson'] = asc_file.to_geojson(src_coords, colourLookup=grey_scale, label=name,
+                                                                     attrib_label='value', flip_coords=flip_coords)
+        wdme_result['result']['geojson'].append(
+            {'type': name, 'url': server_path + '/flooding/floodmodel/' + name + '.geojson'})
 
     if 'TrafficLights' in flood_result:
         wdme_result['result']['traffic_lights'] = flood_result['TrafficLights']
@@ -175,34 +193,53 @@ def create_results(flood_result:dict, server_path:str=None) -> dict:
 
     traffic_lights = wdme_result['result']['traffic_lights']
 
-    #hard-code traffic light results for demo
-    if traffic_lights['current'] == 'green' and traffic_lights['nowcast'] == 'green' and traffic_lights['forecast'] == 'green':
-        traffic_lights['text']['current'] = 'No to little rain observed over the past three days suggesting no real issues from flooding currently.'
-        traffic_lights['text']['nowcast'] = 'No rain forecast in the next couple of hours, suggesting no impact on current situation.'
-        traffic_lights['text']['forecast'] = 'No rain forecast in the next couple of days, suggesting no impact on current situation.'
+    # hard-code traffic light results for demo
+    if traffic_lights['current'] == 'green' and traffic_lights['nowcast'] == 'green' and traffic_lights[
+        'forecast'] == 'green':
+        traffic_lights['text'][
+            'current'] = 'No to little rain observed over the past three days suggesting no real issues from flooding currently.'
+        traffic_lights['text'][
+            'nowcast'] = 'No rain forecast in the next couple of hours, suggesting no impact on current situation.'
+        traffic_lights['text'][
+            'forecast'] = 'No rain forecast in the next couple of days, suggesting no impact on current situation.'
 
     # high-tail
-    if traffic_lights['current'] == 'amber' and traffic_lights['nowcast'] == 'amber' and traffic_lights['forecast'] == 'red':
-        traffic_lights['text']['current'] = 'Some localised, but limited flooding in low-lying areas from recent rainfall over the last couple of days.'
-        traffic_lights['text']['nowcast'] = 'No rain forecast in the next couple of hours, suggesting that any residual water should continue receding.'
-        traffic_lights['text']['forecast'] = 'Significant rain forecast in next 2 to 3 days that could lead to increased flooding.'
+    if traffic_lights['current'] == 'amber' and traffic_lights['nowcast'] == 'amber' and traffic_lights[
+        'forecast'] == 'red':
+        traffic_lights['text'][
+            'current'] = 'Some localised, but limited flooding in low-lying areas from recent rainfall over the last couple of days.'
+        traffic_lights['text'][
+            'nowcast'] = 'No rain forecast in the next couple of hours, suggesting that any residual water should continue receding.'
+        traffic_lights['text'][
+            'forecast'] = 'Significant rain forecast in next 2 to 3 days that could lead to increased flooding.'
 
     # forecast-short
-    if traffic_lights['current'] == 'green' and traffic_lights['nowcast'] == 'red' and traffic_lights['forecast'] == 'amber':
-        traffic_lights['text']['current'] = 'No to little rain observed over the past three days suggesting no real issues from flooding currently.'
+    if traffic_lights['current'] == 'green' and traffic_lights['nowcast'] == 'red' and traffic_lights[
+        'forecast'] == 'amber':
+        traffic_lights['text'][
+            'current'] = 'No to little rain observed over the past three days suggesting no real issues from flooding currently.'
         traffic_lights['text']['nowcast'] = 'Significant rain forecast in the next couple of hours, leading to flooding'
-        traffic_lights['text']['forecast'] = 'No rain forecast in the next couple of days, which should reduce impact of flooding as flood waters recede.'
+        traffic_lights['text'][
+            'forecast'] = 'No rain forecast in the next couple of days, which should reduce impact of flooding as flood waters recede.'
 
     # historic
-    if traffic_lights['current'] == 'red' and traffic_lights['nowcast'] == 'amber' and traffic_lights['forecast'] == 'green':
-        traffic_lights['text']['current'] = 'Recent rains have led to localised flooding, particularly in low-lying areas.'
-        traffic_lights['text']['nowcast'] = 'No rain forecast in the next couple of hours, suggesting that any residual water should continue receding.'
-        traffic_lights['text']['forecast'] = 'No rain forecast in the next couple of days, suggesting that any residual water should continue receding.'
+    if traffic_lights['current'] == 'red' and traffic_lights['nowcast'] == 'amber' and traffic_lights[
+        'forecast'] == 'green':
+        traffic_lights['text'][
+            'current'] = 'Recent rains have led to localised flooding, particularly in low-lying areas.'
+        traffic_lights['text'][
+            'nowcast'] = 'No rain forecast in the next couple of hours, suggesting that any residual water should continue receding.'
+        traffic_lights['text'][
+            'forecast'] = 'No rain forecast in the next couple of days, suggesting that any residual water should continue receding.'
 
     # extreme
-    if traffic_lights['current'] == 'red' and traffic_lights['nowcast'] == 'red' and traffic_lights['forecast'] == 'red':
-        traffic_lights['text']['current'] = 'Recent rains have led to significant flooding, particularly in low-lying areas.'
-        traffic_lights['text']['nowcast'] = 'Significant rain forecast in the next couple of hours, leading to increased flooding'
-        traffic_lights['text']['forecast'] = 'Less rain forecast in the next couple of days, suggesting that flooding should reduce over the coming days.'
+    if traffic_lights['current'] == 'red' and traffic_lights['nowcast'] == 'red' and traffic_lights[
+        'forecast'] == 'red':
+        traffic_lights['text'][
+            'current'] = 'Recent rains have led to significant flooding, particularly in low-lying areas.'
+        traffic_lights['text'][
+            'nowcast'] = 'Significant rain forecast in the next couple of hours, leading to increased flooding'
+        traffic_lights['text'][
+            'forecast'] = 'Less rain forecast in the next couple of days, suggesting that flooding should reduce over the coming days.'
 
     return wdme_result
