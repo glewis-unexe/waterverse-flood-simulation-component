@@ -20,7 +20,7 @@ extra_files = package_files('flood_simulation/data')
 
 setuptools.setup(
     name='flood_simulation',
-    version='44.0.0.3',
+    version='44.0.0.4',
     author='Gareth Lewis',
     author_email='g.lewis2@exeter.ac.uk',
     description='Flood simulation package',
