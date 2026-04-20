@@ -359,11 +359,91 @@ class simulation_Harness(unexecore.testharness.TestHarness):
                 with open(output_filepath + item, "w") as f:
                     json.dump(wdme_results['data'][item], f, indent=4)
 
-
-
         except Exception as e:
             self.log(unexecore.debug.exception_to_string(e))
 
+    def special_etteln_model(self, args:dict={}):
+
+        sizes = [10,30,50,100,200]
+
+        for size in sizes:
+            output_filepath = os.getcwd() + os.sep + 'sim_output/etteln/' +str(size) + os.sep
+            model = EttelnModel(output_filepath=output_filepath)
+
+            timestamp = datetime.datetime.now()
+
+            data = {
+                "Last72Hour": 100,
+                "Last24Hour": 100,
+                "Last12Hour": 100,
+                "Last4Hour": 100,
+                "Last2Hour": 100,
+                "LastHour": 100,
+                "Forecast2Hour": 100,
+                "Forecast0To24": 100,
+                "Forecast24To48": 100,
+                "Forecast48To72": 100,
+                "TrafficLights": {
+                    "current": "test-1",
+                    "nowcast": "test-2",
+                    "forecast": "test-3"
+                },
+                "dateObserved": timestamp
+            }
+            result = model.run(data, timestamp=timestamp, asc_scale=size)
+
+            wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:3035', server_path='http://localhost:8000', flip_coords=False)
+
+            with open(output_filepath + 'output_data.json', "w") as f:
+                json.dump(wdme_results, f, indent=4)
+
+            for item in wdme_results['data']:
+                with open(output_filepath + item, "w") as f:
+                    json.dump(wdme_results['data'][item], f, indent=4)
+
+    def special_torbay_model(self, args:dict={}):
+
+        sizes = [50,100,200,400]
+        #sizes = [400]
+
+        for size in sizes:
+            output_filepath = os.getcwd() + os.sep + 'sim_output/torbay/' +str(size) + os.sep
+            model = TorbayModel(output_filepath=output_filepath)
+
+            timestamp = datetime.datetime.now()
+
+            data = {
+                "Last72Hour": 100,
+                "Last24Hour": 100,
+                "Last12Hour": 100,
+                "Last4Hour": 100,
+                "Last2Hour": 100,
+                "LastHour": 100,
+                "Forecast2Hour": 100,
+                "Forecast0To24": 100,
+                "Forecast24To48": 100,
+                "Forecast48To72": 100,
+                "TrafficLights": {
+                    "current": "test-1",
+                    "nowcast": "test-2",
+                    "forecast": "test-3"
+                },
+                "dateObserved": timestamp
+            }
+            result = model.run(data, timestamp=timestamp, asc_scale=size)
+
+            wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:27700', server_path='http://localhost:8000', flip_coords=True)
+
+            with open(output_filepath + 'output_data.json', "w") as f:
+                json.dump(wdme_results, f, indent=4)
+
+            for item in wdme_results['data']:
+                with open(output_filepath + item, "w") as f:
+                    json.dump(wdme_results['data'][item], f, indent=4)
+
+
 if __name__ == '__main__':
     harness = simulation_Harness()
-    harness.run()
+    #harness.run()
+    #harness.special_etteln_model()
+    harness.special_torbay_model()

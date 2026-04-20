@@ -5,7 +5,11 @@ import json
 import unexecore.debug
 import flood_thread
 
-flood_service = flood_thread.ThreadedService()
+#flood_service = flood_thread.ThreadedService()
+
+import flood_viewer
+#flood_service = flood_viewer.FloodViewer('/home/gareth/Documents/local/waterverse-flood-simulation-component/wdme_flood_component/sim_output/etteln/200/output_data.json')
+flood_service = flood_viewer.FloodViewer('/home/gareth/Documents/local/waterverse-flood-simulation-component/wdme_flood_component/sim_output/torbay/100/output_data.json')
 flood_service.init()
 
 from fastapi import FastAPI, Response, Request

@@ -14,10 +14,12 @@ class FloodMapComponent  extends MapboxComponent {
     constructor() {
         super();
 
-        this.center = [8.76, 51.63];
-        this.zoom = 15;
+        this.center = [8.767, 51.605];
+        this.zoom = 12.9;
         this.bearing = 0;
         this.pitch = 0;
+
+        this.center = [-3.504, 50.431];
 
         this.popup = undefined;
 
@@ -139,7 +141,7 @@ class FloodMapComponent  extends MapboxComponent {
                             for (let i = 0; i < record['geojson'].length; i++) {
                                 let current = record['geojson'][i];
                                 let layer_name = print_timestamp + ' ' + current.type + ' floodmap';
-                                let layer = new MapboxLayer_Geojson(layer_name, current.url, false);
+                                let layer = new MapboxLayer_Geojson(layer_name, current.url, true);
 
                                 layer.paint_data = {
                                     'fill-color': ['get', 'color'],
