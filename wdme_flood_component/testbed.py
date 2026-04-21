@@ -404,7 +404,7 @@ class simulation_Harness(unexecore.testharness.TestHarness):
     def special_torbay_model(self, args:dict={}):
 
         sizes = [50,100,200,400]
-        #sizes = [400]
+        sizes = [8]
 
         for size in sizes:
             output_filepath = os.getcwd() + os.sep + 'sim_output/torbay/' +str(size) + os.sep

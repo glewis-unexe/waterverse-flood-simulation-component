@@ -19,7 +19,8 @@ class FloodMapComponent  extends MapboxComponent {
         this.bearing = 0;
         this.pitch = 0;
 
-        this.center = [-3.504, 50.431];
+        this.center = [-3.5326, 50.438];
+        this.zoom = 11.78;
 
         this.popup = undefined;
 
