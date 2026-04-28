@@ -1,4 +1,6 @@
 import os
+os.environ['WATERVERSE_FLOOD_SIM_GPU'] = 'True'
+
 import datetime
 import inspect
 import time
@@ -14,6 +16,7 @@ import flood_simulation.wdme_results
 import json
 
 from pip._internal.commands import inspect
+
 
 
 class EttelnModel(flood_simulation.rainfall_model.Model):
@@ -454,7 +457,7 @@ class simulation_Harness(unexecore.testharness.TestHarness):
     def special_torbay_model(self, args:dict={}):
 
         sizes = [50,100,200,400]
-        sizes = [8]
+        sizes = [400]
 
         for size in sizes:
             output_filepath = os.getcwd() + os.sep + 'sim_output/torbay/' +str(size) + os.sep
@@ -491,10 +494,119 @@ class simulation_Harness(unexecore.testharness.TestHarness):
                 with open(output_filepath + item, "w") as f:
                     json.dump(wdme_results['data'][item], f, indent=4)
 
+    def special_torbay_model2(self, args:dict={}):
+
+        sizes = [8,16,24,50,100,200,400]
+
+        water_loading = [1,2,5,10,25,50]
+
+        for size in sizes:
+
+            for water in water_loading:
+                output_filepath = os.getcwd() + os.sep + 'sim_output/torbay/' +str(size) + os.sep + str(water) + os.sep
+                model = TorbayModel(output_filepath=output_filepath)
+
+                timestamp = datetime.datetime.now()
+
+                data = {
+                    "Last72Hour": water,
+                    "Last24Hour": water,
+                    "Last12Hour": water,
+                    "Last4Hour": water,
+                    "Last2Hour": water,
+                    "LastHour": water,
+                    "Forecast2Hour": water,
+                    "Forecast0To24": water,
+                    "Forecast24To48": water,
+                    "Forecast48To72": water,
+                    "TrafficLights": {
+                        "current": "test-1",
+                        "nowcast": "test-2",
+                        "forecast": "test-3"
+                    },
+                    "dateObserved": timestamp
+                }
+                time0 = time.time()
+                result = model.run(data, timestamp=timestamp, asc_scale=size)
+                wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:3035', server_path='http://localhost:8000', flip_coords=True)
+
+                with open(output_filepath + 'output_data.json', "w") as f:
+                    json.dump(wdme_results, f, indent=4)
+
+                for item in wdme_results['data']:
+                    with open(output_filepath + item, "w") as f:
+                        json.dump(wdme_results['data'][item], f, indent=4)
+
+                time0 = time.time() - time0
+
+                print(output_filepath +' took' + str(int(time0))+'s')
+
+
+    def fix_shonky_torbay_data(self):
+        result = {
+            "TrafficLights": {
+            "current": "test-1", "forecast": "test-3", "nowcast": "test-2"
+            },
+            "caflood_exe": "cafloodpro_GPU_64_2024",
+            "caflood_src": {
+                "dem": "/home/gareth/Documents/local/waterverse-flood-simulation-component/wdme_flood_component/sim_output/torbay/400/catchment_dem_8m.asc",
+                "land": "/home/gareth/Documents/local/waterverse-flood-simulation-component/wdme_flood_component/sim_output/torbay/400/catchment_landcover_8m.asc",
+                "rain": "/home/gareth/Documents/local/waterverse-flood-simulation-component/wdme_flood_component/sim_output/torbay/400/catchment_mask_8m.asc"
+            },
+            "current": {
+                "caflood_response": 0,
+                "peak": "/home/gareth/Documents/local/waterverse-flood-simulation-component/wdme_flood_component/sim_output/torbay/400/current/current_WDrasterParam_PEAK.asc"
+                },
+            "forecast": {
+                "caflood_response": 0,
+                "1day": "/home/gareth/Documents/local/waterverse-flood-simulation-component/wdme_flood_component/sim_output/torbay/400/forecast/forecast_WDrasterParam_86400.asc",
+                "2day": "/home/gareth/Documents/local/waterverse-flood-simulation-component/wdme_flood_component/sim_output/torbay/400/forecast/forecast_WDrasterParam_172800.asc",
+                "end": "/home/gareth/Documents/local/waterverse-flood-simulation-component/wdme_flood_component/sim_output/torbay/400/forecast/forecast_WDrasterParam_252000.asc",
+                "peak": "/home/gareth/Documents/local/waterverse-flood-simulation-component/wdme_flood_component/sim_output/torbay/400/forecast/forecast_WDrasterParam_PEAK.asc"
+                },
+            "nowcast": {
+                "caflood_response": 0,
+                "peak": "/home/gareth/Documents/local/waterverse-flood-simulation-component/wdme_flood_component/sim_output/torbay/400/nowcast/nowcast_WDrasterParam_PEAK.asc"
+                },
+            "timestamp": "2026-04-28T10:20:51Z"
+        }
+        sizes = [8, 50, 100, 200, 400]
+
+        water_loading = [1, 2, 50, 100]
+
+        for size in sizes:
+
+            for water in water_loading:
+                output_filepath = os.getcwd() + os.sep + 'sim_output/torbay/new/' + str(size) + os.sep + str(water) + os.sep
+
+                result['caflood_src']['dem'] = output_filepath + 'catchment_dem_8m.asc'
+                result['caflood_src']['land'] = output_filepath + 'catchment_landcover_8m.asc'
+                result['caflood_src']['rain'] = output_filepath + 'catchment_mask_8m.asc'
+
+                result['current']['peak'] = output_filepath + 'current/current_WDrasterParam_PEAK.asc'
+
+                result['nowcast']['peak'] = output_filepath + 'nowcast/nowcast_WDrasterParam_PEAK.asc'
+
+                result['forecast']["1day"] = output_filepath + 'forecast/forecast_WDrasterParam_86400.asc'
+                result['forecast']["2day"] = output_filepath + 'forecast/forecast_WDrasterParam_172800.asc'
+                result['forecast']["end"] = output_filepath + 'forecast/forecast_WDrasterParam_252000.asc'
+                result['forecast']["peak"] = output_filepath + 'forecast/forecast_WDrasterParam_PEAK.asc'
+
+
+                wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:27700', server_path='http://localhost:8000', flip_coords=True)
+
+                with open(output_filepath + 'output_data-fixed.json', "w") as f:
+                    json.dump(wdme_results, f, indent=4)
+
+                for item in wdme_results['data']:
+                    with open(output_filepath + item, "w") as f:
+                        json.dump(wdme_results['data'][item], f, indent=4)
+
 
 if __name__ == '__main__':
     harness = simulation_Harness()
     #harness.run()
     #harness.special_etteln_model()
-    harness.special_etteln_model2()
+    #harness.special_etteln_model2()
     #harness.special_torbay_model()
+    #harness.special_torbay_model2()
