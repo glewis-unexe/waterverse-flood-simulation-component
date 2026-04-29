@@ -24,3 +24,5 @@ wdme_flood_component/__pycache__/
 flood_simulation/flood_simulation.egg-info/
 
 .DS_Store
+
+wdme_flood_component/dont-check-in/
