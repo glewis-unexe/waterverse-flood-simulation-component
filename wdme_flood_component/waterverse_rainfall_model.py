@@ -283,7 +283,7 @@ class WaterverseRainfallModel:
             }
         }
 
-           colour_lookup = {}
+        colour_lookup = {}
         colour_lookup[0.099] = (255, 255, 255, 0)
         colour_lookup[0.31] = (255, 140, 0, 255)
         colour_lookup[9999999.0] = (255, 20, 20, 255)
