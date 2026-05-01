@@ -7,20 +7,20 @@ import unexecore.testharness
 import unexecore.debug
 import unexecore.logger
 import unexecore.time
-
-import flood_simulation.rainfall_model
-import flood_simulation.wdme_results
-
+import unexecore.file
 import json
+import datetime
+
+import waterverse_rainfall_model
 
 from pip._internal.commands import inspect
 
 os.environ['WATERVERSE_FLOOD_SIM_GPU'] = 'True'
 
 
-class EttelnModel(flood_simulation.rainfall_model.Model):
-    def __init__(self, output_filepath: str):
-        super().__init__(output_filepath)
+class EttelnModel(waterverse_rainfall_model.WaterverseRainfallModel):
+    def __init__(self, output_filepath: str,delete_files:bool):
+        super().__init__(output_filepath,delete_files)
 
         self.dem_model = 'etteln_demv5.asc'
         self.land_mask = 'etteln_land_maskv5.asc'
@@ -200,10 +200,9 @@ class EttelnModel(flood_simulation.rainfall_model.Model):
 
         return sensible_data
 
-
 class TorbayModel(EttelnModel):
-    def __init__(self, output_filepath: str):
-        super().__init__(output_filepath)
+    def __init__(self, output_filepath: str, delete_files):
+        super().__init__(output_filepath, delete_files)
 
         self.land_mask = 'catchment_landcover_8m.asc'
         self.rain_mask = 'catchment_mask_8m.asc'
@@ -213,6 +212,9 @@ class TorbayModel(EttelnModel):
         self.infiltration = 'infiltration.csv'
 
         self.location_src_root = os.getcwd() + os.sep + 'locations/torbay/'
+
+        self.src_coords = 'EPSG:27700'
+        self.flip_coords = True
 
     def setup_rainfall_scenario_data(self, result: dict):
         scenario_data = {}
@@ -315,7 +317,8 @@ class simulation_Harness(unexecore.testharness.TestHarness):
             }
             result = model.run(data, timestamp=timestamp, asc_scale=100)
 
-            wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:27700', server_path='http://test.com', flip_coords=True)
+            wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:27700',
+                                                                        server_path='http://test.com', flip_coords=True)
             print()
 
             for item in wdme_results['data']:
@@ -353,7 +356,9 @@ class simulation_Harness(unexecore.testharness.TestHarness):
             }
             result = model.run(data, timestamp=timestamp)
 
-            wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:3035', server_path='http://test-etteln.com', flip_coords=False)
+            wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:3035',
+                                                                        server_path='http://test-etteln.com',
+                                                                        flip_coords=False)
 
             for item in wdme_results['data']:
                 with open(output_filepath + item, "w") as f:
@@ -392,7 +397,9 @@ class simulation_Harness(unexecore.testharness.TestHarness):
             }
             result = model.run(data, timestamp=timestamp, asc_scale=size)
 
-            wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:3035', server_path='http://localhost:8000', flip_coords=False)
+            wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:3035',
+                                                                        server_path='http://localhost:8000',
+                                                                        flip_coords=False)
 
             with open(output_filepath + 'output_data.json', "w") as f:
                 json.dump(wdme_results, f, indent=4)
@@ -435,7 +442,9 @@ class simulation_Harness(unexecore.testharness.TestHarness):
                 }
                 time0 = time.time()
                 result = model.run(data, timestamp=timestamp, asc_scale=size)
-                wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:3035', server_path='http://localhost:8000', flip_coords=False)
+                wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:3035',
+                                                                            server_path='http://localhost:8000',
+                                                                            flip_coords=False)
 
                 with open(output_filepath + 'output_data.json', "w") as f:
                     json.dump(wdme_results, f, indent=4)
@@ -479,7 +488,9 @@ class simulation_Harness(unexecore.testharness.TestHarness):
             }
             result = model.run(data, timestamp=timestamp, asc_scale=size)
 
-            wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:27700', server_path='http://localhost:8000', flip_coords=True)
+            wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:27700',
+                                                                        server_path='http://localhost:8000',
+                                                                        flip_coords=True)
 
             with open(output_filepath + 'output_data.json', "w") as f:
                 json.dump(wdme_results, f, indent=4)
@@ -497,7 +508,8 @@ class simulation_Harness(unexecore.testharness.TestHarness):
         for size in sizes:
 
             for water in water_loading:
-                output_filepath = os.getcwd() + os.sep + 'sim_output/torbay/new2/' + str(size) + os.sep + str(water) + os.sep
+                output_filepath = os.getcwd() + os.sep + 'sim_output/torbay/new2/' + str(size) + os.sep + str(
+                    water) + os.sep
                 model = TorbayModel(output_filepath=output_filepath)
 
                 timestamp = datetime.datetime.now()
@@ -522,7 +534,9 @@ class simulation_Harness(unexecore.testharness.TestHarness):
                 }
                 time0 = time.time()
                 result = model.run(data, timestamp=timestamp, asc_scale=size)
-                wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:27700', server_path='http://localhost:8000', flip_coords=True)
+                wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:27700',
+                                                                            server_path='http://localhost:8000',
+                                                                            flip_coords=True)
 
                 with open(output_filepath + 'output_data.json', "w") as f:
                     json.dump(wdme_results, f, indent=4)
@@ -570,7 +584,8 @@ class simulation_Harness(unexecore.testharness.TestHarness):
         for size in sizes:
 
             for water in water_loading:
-                output_filepath = os.getcwd() + os.sep + 'sim_output/torbay/new/' + str(size) + os.sep + str(water) + os.sep
+                output_filepath = os.getcwd() + os.sep + 'sim_output/torbay/new/' + str(size) + os.sep + str(
+                    water) + os.sep
 
                 print(output_filepath)
 
@@ -587,7 +602,7 @@ class simulation_Harness(unexecore.testharness.TestHarness):
                 result['forecast']["end"] = output_filepath + 'forecast/forecast_WDrasterParam_252000.asc'
                 result['forecast']["peak"] = output_filepath + 'forecast/forecast_WDrasterParam_PEAK.asc'
 
-                wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:27700', server_path='http://localhost:8000', flip_coords=True)
+                wdme_results = flood_simulation.wdme_results.create_results(result, src_coords='EPSG:27700',server_path='http://localhost:8000',flip_coords=True)
 
                 with open(output_filepath + 'output_data-fixed.json', "w") as f:
                     json.dump(wdme_results, f, indent=4)
@@ -596,13 +611,84 @@ class simulation_Harness(unexecore.testharness.TestHarness):
                     with open(output_filepath + item, "w") as f:
                         json.dump(wdme_results['data'][item], f, indent=4)
 
+    def special_torbay_stats(self, sim_work:dict):
+        sizes = [8, 16, 32, 64]
+        water_loading = [5, 10, 25, 75]
+
+        """
+        timestamps
+            start - cafloodpro_GPU_64_2024
+            time to run current = start - current/
+            time to run nowcast = nowcast/ - current/
+            time to run forecast = forecast/ - current/
+
+        """
+
+        for size in sim_work['sizes']:
+            for water in sim_work['water_loading']:
+                output_filepath = sim_work['root'] + str(size) + os.sep + str(water) + os.sep
+
+                model = TorbayModel(output_filepath=output_filepath, delete_files=False)
+
+                start_time = datetime.datetime.fromtimestamp(os.path.getmtime(output_filepath + 'cafloodpro_GPU_64_2024'), tz=datetime.timezone.utc)
+
+                print(output_filepath)
+
+                current_time = datetime.datetime.fromtimestamp(os.path.getmtime(output_filepath + 'current' + os.sep),tz=datetime.timezone.utc)
+                nowcast_time = datetime.datetime.fromtimestamp(os.path.getmtime(output_filepath + 'nowcast' + os.sep),tz=datetime.timezone.utc)
+                forcast_time = datetime.datetime.fromtimestamp(os.path.getmtime(output_filepath + 'forecast' + os.sep),tz=datetime.timezone.utc)
+
+                print('\t' + 'current: ' + self.print_timedelta(current_time - start_time))
+                print('\t' + 'nowcast: ' + self.print_timedelta(nowcast_time - current_time))
+                print('\t' + 'forcast: ' + self.print_timedelta(forcast_time - nowcast_time))
+
+                sim_results = model.create_empty_simulation_results()
+
+                wdme_results = model.create_wdme_results(sim_results, server_path='http://localhost:8000')
+
+                dump_path = os.getcwd() + os.sep + 'dump'+ os.sep
+
+                unexecore.file.buildfilepath(dump_path)
+
+                dumpfile_root = dump_path + 'output-' + str(size) + '-' + str(water)
+
+                with open(dumpfile_root + '.json', "w") as f:
+                    json.dump(wdme_results, f, indent=4)
+
+                for item in wdme_results['data']:
+                    with open(dumpfile_root + '-' + item, "w") as f:
+                        json.dump(wdme_results['data'][item], f, indent=4)
+
+
+
+    def print_timedelta(self, td: datetime.timedelta) -> str:
+
+        hours, remainder = divmod(td.seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+
+        return str(hours).zfill(2) + ':' + str(minutes).zfill(2) + ':' + str(seconds).zfill(2) + ' -> ' + str((hours * 60) + minutes).zfill(3)
+
 
 if __name__ == '__main__':
     harness = simulation_Harness()
+
+    sim_work = {
+        'sizes': [8, 16, 32, 64],
+        'water_loading': [5, 10, 25, 75],
+        'root': os.getcwd() + os.sep + 'sim_output/torbay/new2/'
+    }
+
+    sim_work = {
+        'sizes': [64],
+        'water_loading': [5, 10, 25, 75],
+        'root': '/home/gareth/Documents/dev/work/waterverse/waterverse-flood-simulation-component/wdme_flood_component/sim_output/torbat-new2/'
+    }
+
     # harness.run()
     # harness.special_etteln_model()
     # harness.special_etteln_model2()
     # harness.special_torbay_model()
-    harness.special_torbay_model2()
+    # harness.special_torbay_model2()
+    harness.special_torbay_stats(sim_work)
 
     # harness.fix_shonky_torbay_data()
