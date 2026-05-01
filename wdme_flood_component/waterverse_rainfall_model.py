@@ -283,13 +283,10 @@ class WaterverseRainfallModel:
             }
         }
 
-        colour_lookup = {}
-        colour_lookup[0.1] = (255, 255, 255, 0)
-        colour_lookup[0.5] = (206, 236, 254, 255)
-        colour_lookup[1.0] = (156, 203, 254, 255)
-        colour_lookup[2.0] = (114, 153, 254, 255)
-        colour_lookup[4.0] = (69, 102, 254, 255)
-        colour_lookup[9999999.0] = (23, 57, 206, 255)
+           colour_lookup = {}
+        colour_lookup[0.099] = (255, 255, 255, 0)
+        colour_lookup[0.31] = (255, 140, 0, 255)
+        colour_lookup[9999999.0] = (255, 20, 20, 255)
 
         # this should be the blue scale that is normally used
         if False:
