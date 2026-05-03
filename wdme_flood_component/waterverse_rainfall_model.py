@@ -14,7 +14,7 @@ import unexecore.ascfile
 
 
 class WaterverseRainfallModel:
-    def __init__(self, output_filepath: str,delete_files=False):
+    def __init__(self, output_filepath: str=None, delete_files:bool=False):
         self.land_mask = 'etteln_land_maskv5.asc'
         self.roughness = 'roughnessRates.csv'
         self.infiltration = 'infiltrationRates.csv'
@@ -25,22 +25,28 @@ class WaterverseRainfallModel:
         self.nowcast_scenario = {}
         self.forecast_scenario = {}
 
+        self.output_filepath = None
+
         #coords for output WDME visualisation data
         self.src_coords = 'EPSG:27700'
         self.flip_coords = False
 
+        self.init(output_filepath, delete_files)
+
+    def init(self,output_filepath: str=None, delete_files:bool=False):
         self.output_filepath = output_filepath
 
-        if self.output_filepath[-1] != os.sep:
-            self.output_filepath += os.sep
+        if self.output_filepath is not None:
+            if self.output_filepath[-1] != os.sep:
+                self.output_filepath += os.sep
 
-        if not os.path.exists(self.output_filepath):
-            os.makedirs(self.output_filepath)
-        else:
-            if delete_files:
-                unexecore.file.deltree(self.output_filepath)
+            if not os.path.exists(self.output_filepath):
+                os.makedirs(self.output_filepath)
+            else:
+                if delete_files:
+                    unexecore.file.deltree(self.output_filepath)
 
-        unexecore.file.buildfilepath(self.output_filepath)
+            unexecore.file.buildfilepath(self.output_filepath)
 
     def setup_rainfall_scenario_data(self, result: dict) -> bool:
         self.current_scenario = {}
